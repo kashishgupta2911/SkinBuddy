@@ -15,52 +15,58 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: AppSpacing.xl),
-                      _buildLogo(),
-                      const SizedBox(height: AppSpacing.xxl),
-                      _buildFeatureItem(
-                        icon: Icons.camera_alt_outlined,
-                        title: 'Snap a photo',
-                        subtitle: 'Take a clear picture of your skin concern',
+      body: Stack(
+        children: [
+          Positioned.fill(child: CustomPaint(painter: _WavePainter())),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: AppSpacing.xxl),
+                          _buildLogo(),
+                          const SizedBox(height: AppSpacing.xxl + 24),
+                          _buildFeatureItem(
+                            icon: Icons.camera_alt_rounded,
+                            title: 'Snap a photo',
+                            subtitle:
+                                'Take a clear picture of your skin concern',
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFeatureItem(
+                            icon: Icons.chat_bubble_rounded,
+                            title: 'Add context',
+                            subtitle:
+                                'Share lifestyle details to help us understand',
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFeatureItem(
+                            icon: Icons.menu_book_rounded,
+                            title: 'Get guidance',
+                            subtitle:
+                                'Receive an urgency assessment and next steps',
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+                          _buildDisclaimer(),
+                        ],
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildFeatureItem(
-                        icon: Icons.chat_bubble_outline,
-                        title: 'Add context',
-                        subtitle:
-                            'Share lifestyle details to help us understand',
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildFeatureItem(
-                        icon: Icons.shield_outlined,
-                        title: 'Get guidance',
-                        subtitle:
-                            'Receive an urgency assessment and next steps',
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      _buildDisclaimer(),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton(
+                    onPressed: () => _handleGetStarted(context),
+                    child: const Text('Get Started'),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              FilledButton(
-                onPressed: () => _handleGetStarted(context),
-                child: const Text('Get Started'),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -69,15 +75,15 @@ class OnboardingScreen extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 80,
-          height: 80,
+          width: 88,
+          height: 88,
           decoration: BoxDecoration(
-            color: AppColors.brownMedium.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(20),
+            color: AppColors.brownMedium.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(22),
           ),
           child: const Icon(
             Icons.camera_alt_rounded,
-            size: 40,
+            size: 44,
             color: AppColors.brownMedium,
           ),
         ),
@@ -85,8 +91,8 @@ class OnboardingScreen extends StatelessWidget {
         const Text(
           'SkinBuddy',
           style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
             color: AppColors.brownDark,
           ),
         ),
@@ -94,9 +100,9 @@ class OnboardingScreen extends StatelessWidget {
         const Text(
           'Your skin, understood',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 17,
             color: AppColors.primary,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -111,13 +117,13 @@ class OnboardingScreen extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 48,
-          height: 48,
+          width: 50,
+          height: 50,
           decoration: BoxDecoration(
             color: AppColors.iconBg,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: AppColors.brownMedium, size: 24),
+          child: Icon(icon, color: AppColors.primary, size: 24),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -127,8 +133,8 @@ class OnboardingScreen extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.primary,
                 ),
               ),
@@ -136,7 +142,7 @@ class OnboardingScreen extends StatelessWidget {
               Text(
                 subtitle,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -151,30 +157,31 @@ class OnboardingScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.disclaimerBg,
+        color: const Color(0xFFF5DABB).withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, color: AppColors.primary, size: 22),
+          const Icon(Icons.info, color: AppColors.primary, size: 24),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: RichText(
               text: const TextSpan(
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 15,
                   color: AppColors.textPrimary,
-                  height: 1.4,
+                  height: 1.5,
+                  fontWeight: FontWeight.w400,
                 ),
                 children: [
                   TextSpan(
-                    text: 'Important: ',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    text: 'Important',
+                    style: TextStyle(fontWeight: FontWeight.w800),
                   ),
+                  TextSpan(text: ': This is a triage tool, not a\nmedical diagnosis.\n'),
                   TextSpan(
-                    text:
-                        'This is a triage tool, not a medical diagnosis. Always consult a healthcare professional for medical advice.',
+                    text: 'Always consult a healthcare\nprofessional for medical advice.',
                   ),
                 ],
               ),
@@ -184,4 +191,38 @@ class OnboardingScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _WavePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    final paint = Paint()
+      ..color = const Color(0xFFF5DABB)
+      ..style = PaintingStyle.fill;
+
+    final waveY = h * 0.32;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(0, waveY)
+      ..cubicTo(
+        w * 0.25, waveY + 35,
+        w * 0.50, waveY + 30,
+        w * 0.70, waveY + 5,
+      )
+      ..cubicTo(
+        w * 0.85, waveY - 12,
+        w * 0.95, waveY + 5,
+        w, waveY - 5,
+      )
+      ..lineTo(w, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
