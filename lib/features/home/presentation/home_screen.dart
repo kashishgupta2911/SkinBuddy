@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../scan/presentation/scan_screen.dart';
+import 'quick_tip_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,7 +29,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.xl + 8),
               _buildRecentScans(),
               const SizedBox(height: AppSpacing.xl + 8),
-              _buildQuickTips(),
+              _buildQuickTips(context),
               const SizedBox(height: AppSpacing.lg),
             ],
           ),
@@ -190,7 +191,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickTips() {
+  Widget _buildQuickTips(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,6 +208,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _buildTipCard(
+                context: context,
                 icon: Icons.wb_sunny_outlined,
                 label: 'UV Protection',
                 iconColor: AppColors.primary,
@@ -215,6 +217,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _buildTipCard(
+                context: context,
                 icon: Icons.water_drop_outlined,
                 label: 'Hydration',
                 iconColor: AppColors.greenText,
@@ -223,6 +226,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _buildTipCard(
+                context: context,
                 icon: Icons.favorite_outline,
                 label: 'Self-Care',
                 iconColor: Colors.redAccent,
@@ -235,30 +239,38 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildTipCard({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required Color iconColor,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-      decoration: BoxDecoration(
-        color: AppColors.tipCardBg,
-        borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => QuickTipDetailScreen(categoryKey: label),
+        ),
       ),
-      child: Column(
-        children: [
-          Icon(icon, color: iconColor, size: 28),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+        decoration: BoxDecoration(
+          color: AppColors.tipCardBg,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: iconColor, size: 28),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

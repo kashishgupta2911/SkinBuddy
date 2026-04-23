@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/services/profile_store.dart';
 import '../../../core/theme/app_theme.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -10,10 +11,20 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  bool _scanReminders = true;
-  bool _resultsReady = true;
-  bool _weeklyTips = false;
-  bool _productUpdates = false;
+  final _store = ProfileStore.instance;
+  late bool _scanReminders;
+  late bool _resultsReady;
+  late bool _weeklyTips;
+  late bool _productUpdates;
+
+  @override
+  void initState() {
+    super.initState();
+    _scanReminders = _store.scanReminders;
+    _resultsReady = _store.resultsReady;
+    _weeklyTips = _store.weeklyTips;
+    _productUpdates = _store.productUpdates;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +54,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     title: 'Scan Reminders',
                     subtitle: 'Monthly check-in reminders',
                     value: _scanReminders,
-                    onChanged: (v) => setState(() => _scanReminders = v),
+                    onChanged: (v) => setState(() => _scanReminders = _store.scanReminders = v),
                   ),
                   const Divider(color: AppColors.iconBg, height: 1, indent: 16, endIndent: 16),
                   _ToggleRow(
                     title: 'Results Ready',
                     subtitle: 'When your analysis is complete',
                     value: _resultsReady,
-                    onChanged: (v) => setState(() => _resultsReady = v),
+                    onChanged: (v) => setState(() => _resultsReady = _store.resultsReady = v),
                   ),
                 ],
               ),
@@ -63,14 +74,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     title: 'Weekly Tips',
                     subtitle: 'Skincare advice and articles',
                     value: _weeklyTips,
-                    onChanged: (v) => setState(() => _weeklyTips = v),
+                    onChanged: (v) => setState(() => _weeklyTips = _store.weeklyTips = v),
                   ),
                   const Divider(color: AppColors.iconBg, height: 1, indent: 16, endIndent: 16),
                   _ToggleRow(
                     title: 'Product Updates',
                     subtitle: 'New features and improvements',
                     value: _productUpdates,
-                    onChanged: (v) => setState(() => _productUpdates = v),
+                    onChanged: (v) => setState(() => _productUpdates = _store.productUpdates = v),
                   ),
                 ],
               ),

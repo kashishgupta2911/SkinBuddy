@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/services/profile_store.dart';
 import '../../../core/theme/app_theme.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
@@ -10,9 +11,18 @@ class PrivacySettingsScreen extends StatefulWidget {
 }
 
 class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
-  bool _shareAnonymousData = true;
-  bool _localStorageOnly = true;
-  bool _biometricLock = false;
+  final _store = ProfileStore.instance;
+  late bool _shareAnonymousData;
+  late bool _localStorageOnly;
+  late bool _biometricLock;
+
+  @override
+  void initState() {
+    super.initState();
+    _shareAnonymousData = _store.shareAnonymousData;
+    _localStorageOnly = _store.localStorageOnly;
+    _biometricLock = _store.biometricLock;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +56,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                         'Help improve SkinBuddy by sharing anonymized usage data',
                     value: _shareAnonymousData,
                     onChanged: (v) =>
-                        setState(() => _shareAnonymousData = v),
+                        setState(() => _shareAnonymousData = _store.shareAnonymousData = v),
                   ),
                   const Divider(
                     color: AppColors.iconBg,
@@ -59,7 +69,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     subtitle: 'Store all data on this device only',
                     value: _localStorageOnly,
                     onChanged: (v) =>
-                        setState(() => _localStorageOnly = v),
+                        setState(() => _localStorageOnly = _store.localStorageOnly = v),
                   ),
                 ],
               ),
@@ -74,7 +84,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                         'Require Face ID or Touch ID to open app',
                     value: _biometricLock,
                     onChanged: (v) =>
-                        setState(() => _biometricLock = v),
+                        setState(() => _biometricLock = _store.biometricLock = v),
                   ),
                 ],
               ),
