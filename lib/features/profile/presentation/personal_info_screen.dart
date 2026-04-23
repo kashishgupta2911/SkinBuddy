@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/services/profile_store.dart';
 import '../../../core/theme/app_theme.dart';
 
 const List<String> _skinTypes = [
@@ -18,10 +19,20 @@ class PersonalInfoScreen extends StatefulWidget {
 }
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
-  final _nameController = TextEditingController(text: 'Alice Williams');
-  final _emailController = TextEditingController(text: 'alicewilliams@gmail.com');
-  DateTime _dateOfBirth = DateTime(1990, 6, 15);
-  String _skinType = 'Combination';
+  final _store = ProfileStore.instance;
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late DateTime _dateOfBirth;
+  late String _skinType;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: _store.fullName);
+    _emailController = TextEditingController(text: _store.email);
+    _dateOfBirth = _store.dateOfBirth;
+    _skinType = _store.skinType;
+  }
 
   @override
   void dispose() {
@@ -42,10 +53,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   }
 
   void _handleSave() {
+    _store.fullName = _nameController.text;
+    _store.email = _emailController.text;
+    _store.dateOfBirth = _dateOfBirth;
+    _store.skinType = _skinType;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Changes saved')),
+      const SnackBar(
+        content: Text('Changes saved'),
+        duration: Duration(seconds: 2),
+      ),
     );
-    Navigator.of(context).pop();
   }
 
   String get _formattedDate =>

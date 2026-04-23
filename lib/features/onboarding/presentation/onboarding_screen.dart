@@ -157,7 +157,7 @@ class OnboardingScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5DABB).withValues(alpha: 0.45),
+        color: const Color(0xFFE8D5B8).withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
