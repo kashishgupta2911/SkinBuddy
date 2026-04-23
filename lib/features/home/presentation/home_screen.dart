@@ -25,9 +25,9 @@ class HomeScreen extends StatelessWidget {
               _buildGreeting(),
               const SizedBox(height: AppSpacing.lg),
               _buildNewScanButton(context),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.xl + 8),
               _buildRecentScans(),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.xl + 8),
               _buildQuickTips(),
               const SizedBox(height: AppSpacing.lg),
             ],
@@ -66,7 +66,7 @@ class HomeScreen extends StatelessWidget {
       onTap: () => _handleNewScan(context),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 22),
+        padding: const EdgeInsets.symmetric(vertical: 52),
         decoration: BoxDecoration(
           color: AppColors.brownMedium,
           borderRadius: BorderRadius.circular(20),
