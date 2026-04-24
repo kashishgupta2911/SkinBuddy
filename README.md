@@ -29,9 +29,13 @@ flowchart TD
   triage --> save[SaveRecordToFirestore]
 ```
 
-## Run
-flutter pub get
-flutter run
+## Install dependencies
+- Install the Flutter SDK manually and add to PATH
+- Install the Flutter SDK plugin in Android Studio Marketplace
+- Run `flutter pub get`
+
+## Start App
+- Run `flutter run`
 
 ## Firebase
 - Add platform Firebase config files and run `flutterfire configure`.
