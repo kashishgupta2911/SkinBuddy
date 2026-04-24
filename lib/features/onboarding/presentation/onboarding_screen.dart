@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../shell/app_shell.dart';
@@ -15,9 +16,19 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFEBD1),
       body: Stack(
         children: [
-          Positioned.fill(child: CustomPaint(painter: _WavePainter())),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Image.asset(
+              'assets/onboarding/wave.png',
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topCenter,
+            ),
+          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -75,16 +86,13 @@ class OnboardingScreen extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 88,
-          height: 88,
-          decoration: BoxDecoration(
-            color: AppColors.brownMedium.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: const Icon(
-            Icons.camera_alt_rounded,
-            size: 44,
-            color: AppColors.brownMedium,
+          width: 90,
+          height: 90,
+          alignment: Alignment.center,
+          child: SvgPicture.asset(
+            'assets/onboarding/heart.svg',
+            width: 74,
+            height: 74,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -120,7 +128,7 @@ class OnboardingScreen extends StatelessWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: AppColors.iconBg,
+            color: const Color(0xFFFFF8F3),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, color: AppColors.primary, size: 24),
@@ -191,38 +199,4 @@ class OnboardingScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _WavePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    final paint = Paint()
-      ..color = const Color(0xFFF5DABB)
-      ..style = PaintingStyle.fill;
-
-    final waveY = h * 0.32;
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(0, waveY)
-      ..cubicTo(
-        w * 0.25, waveY + 35,
-        w * 0.50, waveY + 30,
-        w * 0.70, waveY + 5,
-      )
-      ..cubicTo(
-        w * 0.85, waveY - 12,
-        w * 0.95, waveY + 5,
-        w, waveY - 5,
-      )
-      ..lineTo(w, 0)
-      ..close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
