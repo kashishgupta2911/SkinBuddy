@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "396073908172",
+    "project_id": "skinbuddy-39604",
+    "storage_bucket": "skinbuddy-39604.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396073908172:android:76a5ba43aa209eaba74f69",
+        "android_client_info": {
+          "package_name": "com.skinbuddy.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-9XKfvq7YXVPHFHUG4WYolYKdN_TUlms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
