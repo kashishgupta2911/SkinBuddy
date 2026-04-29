@@ -95,26 +95,73 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildGreeting() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Hey, Alice!',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primary,
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hey!',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
           ),
-        ),
-        SizedBox(height: AppSpacing.xs),
-        Text(
-          'How can we help you today?',
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.textSecondary,
+          SizedBox(height: AppSpacing.xs),
+          Text(
+            'How can we help you today?',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+            ),
           ),
-        ),
-      ],
+        ],
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        String firstName = 'there';
+
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+
+          firstName =
+              (data?['first_name'] as String? ?? '').trim();
+
+          if (firstName.isEmpty) {
+            firstName = 'there';
+          }
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hey, $firstName!',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            const Text(
+              'How can we help you today?',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
