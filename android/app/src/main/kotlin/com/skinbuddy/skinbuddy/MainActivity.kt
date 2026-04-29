@@ -1,4 +1,4 @@
-package com.skinbuddy.skinbuddy
+package com.skinbuddy.app
 
 import io.flutter.embedding.android.FlutterActivity
 

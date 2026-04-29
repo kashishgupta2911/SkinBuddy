@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../domain/triage_record.dart';
 
 class _ScanEntry {
   const _ScanEntry({
@@ -16,38 +19,48 @@ class _ScanEntry {
   final String tag;
   final Color tagColor;
   final Color tagTextColor;
-}
 
-const _entries = <_ScanEntry>[
-  _ScanEntry(
-    location: 'Left cheek',
-    dateTime: 'April 10, 2026 · 2:30 PM',
-    tag: 'Low urgency',
-    tagColor: AppColors.greenChip,
-    tagTextColor: AppColors.greenText,
-  ),
-  _ScanEntry(
-    location: 'Forearm',
-    dateTime: 'April 5, 2026 · 10:15 AM',
-    tag: 'Monitor closely',
-    tagColor: AppColors.orangeChip,
-    tagTextColor: AppColors.orangeText,
-  ),
-  _ScanEntry(
-    location: 'Right hand',
-    dateTime: 'March 28, 2026 · 4:45 PM',
-    tag: 'Low urgency',
-    tagColor: AppColors.greenChip,
-    tagTextColor: AppColors.greenText,
-  ),
-  _ScanEntry(
-    location: 'Neck',
-    dateTime: 'March 15, 2026 · 11:20 AM',
-    tag: 'Low urgency',
-    tagColor: AppColors.greenChip,
-    tagTextColor: AppColors.greenText,
-  ),
-];
+  factory _ScanEntry.fromRecord(TriageRecord record) {
+    final urgencyText = record.urgency.trim();
+    final triageText = record.triageLevel.trim();
+    final isUrgent = urgencyText.toLowerCase().contains('urgent') &&
+        urgencyText.toLowerCase() != 'low urgency';
+
+    return _ScanEntry(
+      location: record.bodyPart,
+      dateTime: _formatTimestamp(record.timestamp),
+      tag: urgencyText.isNotEmpty
+          ? urgencyText
+          : (triageText.isNotEmpty ? triageText : 'No triage level'),
+      tagColor: isUrgent ? AppColors.orangeChip : AppColors.greenChip,
+      tagTextColor: isUrgent ? AppColors.orangeText : AppColors.greenText,
+    );
+  }
+
+  static String _formatTimestamp(DateTime timestamp) {
+    const months = <String>[
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    final month = months[timestamp.month - 1];
+    final hour = timestamp.hour % 12 == 0 ? 12 : timestamp.hour % 12;
+    final minutes = timestamp.minute.toString().padLeft(2, '0');
+    final period = timestamp.hour >= 12 ? 'PM' : 'AM';
+
+    return '$month ${timestamp.day}, ${timestamp.year} · $hour:$minutes $period';
+  }
+}
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -91,14 +104,107 @@ class HistoryScreen extends StatelessWidget {
   }
 
   Widget _buildTimeline() {
-    return Column(
-      children: List.generate(_entries.length, (i) {
-        return _TimelineItem(
-          entry: _entries[i],
-          isFirst: i == 0,
-          isLast: i == _entries.length - 1,
+    return StreamBuilder<List<TriageRecord>>(
+      stream: _historyStream(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _buildMessageCard(
+            icon: Icons.error_outline,
+            title: 'Unable to load history',
+            message: 'Please try again in a moment.',
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final entries = (snapshot.data ?? const <TriageRecord>[])
+            .map(_ScanEntry.fromRecord)
+            .toList(growable: false);
+
+        if (entries.isEmpty) {
+          return _buildMessageCard(
+            icon: Icons.access_time_rounded,
+            title: 'No scan history yet',
+            message: 'Your completed scans will appear here over time.',
+          );
+        }
+
+        return Column(
+          children: List.generate(entries.length, (i) {
+            return _TimelineItem(
+              entry: entries[i],
+              isFirst: i == 0,
+              isLast: i == entries.length - 1,
+            );
+          }),
         );
-      }),
+      },
+    );
+  }
+
+  Stream<List<TriageRecord>> _historyStream() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return Stream.value(const <TriageRecord>[]);
+    }
+
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('triage_records')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          final records = snapshot.docs
+              .map(TriageRecord.fromFirestore)
+              .toList(growable: false);
+          records.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return records;
+        });
+  }
+
+  Widget _buildMessageCard({
+    required IconData icon,
+    required String title,
+    required String message,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.iconBg.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.navUnselected, size: 28),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

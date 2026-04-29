@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/services/profile_store.dart';
 import '../../../core/theme/app_theme.dart';
@@ -11,6 +13,17 @@ const List<String> _skinTypes = [
   'Sensitive',
 ];
 
+const List<String> _ageRanges = [
+  '0–12',
+  '13–17',
+  '18–24',
+  '25–34',
+  '35–44',
+  '45–54',
+  '55–64',
+  '65+',
+];
+
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
 
@@ -20,54 +33,165 @@ class PersonalInfoScreen extends StatefulWidget {
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final _store = ProfileStore.instance;
-  late final TextEditingController _nameController;
+
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
-  late DateTime _dateOfBirth;
+
   late String _skinType;
+  late String _ageRange;
+
+  bool _isSaving = false;
+  bool _isLoadingProfile = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: _store.fullName);
-    _emailController = TextEditingController(text: _store.email);
-    _dateOfBirth = _store.dateOfBirth;
-    _skinType = _store.skinType;
+
+    _firstNameController = TextEditingController(
+      text: _store.firstName,
+    );
+
+    _lastNameController = TextEditingController(
+      text: _store.lastName,
+    );
+
+    _emailController = TextEditingController(
+      text: _store.email,
+    );
+
+    // MUST set defaults first
+    _skinType = _store.skinType.isNotEmpty
+        ? _store.skinType
+        : 'Normal';
+
+    _ageRange = '18–24';
+
+    _loadUserProfile();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
-  Future<void> _handlePickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dateOfBirth,
-      firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
-    );
-    if (picked == null) return;
-    setState(() => _dateOfBirth = picked);
+  Future<void> _loadUserProfile() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    setState(() => _isLoadingProfile = true);
+
+    try {
+      final snapshot =
+      await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      final data = snapshot.data();
+      if (!mounted || data == null) return;
+
+      setState(() {
+        _firstNameController.text =
+            (data['first_name'] as String? ?? '').trim();
+
+        _lastNameController.text =
+            (data['last_name'] as String? ?? '').trim();
+
+        _emailController.text =
+            (data['email'] as String? ?? '').trim();
+
+        final savedAgeRange =
+        (data['age_range'] as String? ?? '18–24').trim();
+
+        _ageRange = _ageRanges.contains(savedAgeRange)
+            ? savedAgeRange
+            : '18–24';
+
+        final savedSkinType =
+        (data['skin_type'] as String? ?? 'Normal').trim();
+
+        _skinType = _skinTypes.contains(savedSkinType)
+            ? savedSkinType
+            : 'Normal';
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to load profile right now.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingProfile = false);
+      }
+    }
   }
 
-  void _handleSave() {
-    _store.fullName = _nameController.text;
-    _store.email = _emailController.text;
-    _store.dateOfBirth = _dateOfBirth;
+  Future<void> _handleSave() async {
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final email = _emailController.text.trim();
+
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete all required fields.'),
+        ),
+      );
+      return;
+    }
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in again to save changes.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    _store.firstName = firstName;
+    _store.lastName = lastName;
+    _store.email = email;
     _store.skinType = _skinType;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Changes saved'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'age_range': _ageRange,
+        'skin_type': _skinType,
+      }, SetOptions(merge: true));
 
-  String get _formattedDate =>
-      '${_dateOfBirth.year}-${_dateOfBirth.month.toString().padLeft(2, '0')}-${_dateOfBirth.day.toString().padLeft(2, '0')}';
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Changes saved'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to save profile right now.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +209,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: AppSpacing.lg),
+
                     const Text(
                       'Personal Information',
                       style: TextStyle(
@@ -93,27 +218,69 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                         color: AppColors.textPrimary,
                       ),
                     ),
+
                     const SizedBox(height: AppSpacing.xl),
-                    _buildTextField(
-                      label: 'Full Name',
-                      controller: _nameController,
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            label: 'First Name',
+                            controller: _firstNameController,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: _buildTextField(
+                            label: 'Last Name',
+                            controller: _lastNameController,
+                          ),
+                        ),
+                      ],
                     ),
+
                     const SizedBox(height: AppSpacing.lg),
+
                     _buildTextField(
                       label: 'Email',
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                     ),
+
                     const SizedBox(height: AppSpacing.lg),
-                    _buildDateField(),
+
+                    _buildAgeRangeField(),
+
                     const SizedBox(height: AppSpacing.lg),
+
                     _buildSkinTypeField(),
+
                     const SizedBox(height: AppSpacing.xl),
+
                     FilledButton(
-                      onPressed: _handleSave,
-                      child: const Text('Save Changes'),
+                      onPressed: _isSaving ? null : _handleSave,
+                      child: _isSaving
+                          ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : const Text('Save Changes'),
                     ),
+
                     const SizedBox(height: AppSpacing.xl),
+
+                    if (_isLoadingProfile)
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          bottom: AppSpacing.md,
+                        ),
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -190,9 +357,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(
-                color: AppColors.brownLight.withValues(alpha: 0.5),
-              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -202,7 +366,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+              ),
             ),
           ),
         ),
@@ -210,12 +376,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     );
   }
 
-  Widget _buildDateField() {
+  Widget _buildAgeRangeField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Date of Birth',
+          'Age Range',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -223,37 +389,41 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        GestureDetector(
-          onTap: _handlePickDate,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: 14,
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.brownLight.withValues(alpha: 0.5),
             ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.brownLight.withValues(alpha: 0.5),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _ageRange,
+              isExpanded: true,
+              style: const TextStyle(
+                fontSize: 15,
+                color: AppColors.textPrimary,
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formattedDate,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
-                  ),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.brownMedium,
+              ),
+              items: _ageRanges
+                  .map(
+                    (range) => DropdownMenuItem(
+                  value: range,
+                  child: Text(range),
                 ),
-                const Icon(
-                  Icons.calendar_today_outlined,
-                  size: 18,
-                  color: AppColors.brownMedium,
-                ),
-              ],
+              )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _ageRange = value);
+              },
             ),
           ),
         ),
@@ -275,7 +445,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         ),
         const SizedBox(height: AppSpacing.xs),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+          ),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
@@ -287,20 +459,25 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             child: DropdownButton<String>(
               value: _skinType,
               isExpanded: true,
-              icon: const Icon(
-                Icons.keyboard_arrow_down,
-                color: AppColors.brownMedium,
-              ),
               style: const TextStyle(
                 fontSize: 15,
                 color: AppColors.textPrimary,
               ),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.brownMedium,
+              ),
               items: _skinTypes
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                  .map(
+                    (type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(type),
+                ),
+              )
                   .toList(),
-              onChanged: (v) {
-                if (v == null) return;
-                setState(() => _skinType = v);
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _skinType = value);
               },
             ),
           ),

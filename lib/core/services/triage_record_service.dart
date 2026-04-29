@@ -21,17 +21,20 @@ class TriageRecordService {
     required String modelVersion,
     bool consentToStoreImagePath = false,
   }) async {
-    await _ensureSignedIn();
-    final uid = _auth.currentUser!.uid;
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError(
+          'User must be authenticated before saving triage records.');
+    }
+    final uid = user.uid;
 
     final payload = <String, dynamic>{
-      'label': prediction.label,
-      'confidence': prediction.confidence,
-      'triageOutcome': decision.outcome.name,
-      'triageReason': decision.reason,
-      'modelVersion': modelVersion,
-      'appVersion': '1.0.0',
-      'createdAt': FieldValue.serverTimestamp(),
+      'body_part': prediction.label,
+      'notes': decision.reason,
+      'predicted_group': prediction.label,
+      'timestamp': FieldValue.serverTimestamp(),
+      'triage_level': decision.outcome.name,
+      'urgency': decision.outcome.name == 'urgent' ? 'Urgent' : 'Low urgency',
     };
 
     if (consentToStoreImagePath) {
@@ -43,12 +46,5 @@ class TriageRecordService {
         .doc(uid)
         .collection('triage_records')
         .add(payload);
-  }
-
-  Future<void> _ensureSignedIn() async {
-    if (_auth.currentUser != null) {
-      return;
-    }
-    await _auth.signInAnonymously();
   }
 }

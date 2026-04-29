@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../shell/app_shell.dart';
+import '../../auth/presentation/login_screen.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   void _handleGetStarted(BuildContext context) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const AppShell()),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
 
@@ -187,9 +187,12 @@ class OnboardingScreen extends StatelessWidget {
                     text: 'Important',
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
-                  TextSpan(text: ': This is a triage tool, not a\nmedical diagnosis.\n'),
                   TextSpan(
-                    text: 'Always consult a healthcare\nprofessional for medical advice.',
+                      text:
+                          ': This is a triage tool, not a\nmedical diagnosis.\n'),
+                  TextSpan(
+                    text:
+                        'Always consult a healthcare\nprofessional for medical advice.',
                   ),
                 ],
               ),

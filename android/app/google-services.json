@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "396073908172",
+    "project_id": "skinbuddy-39604",
+    "storage_bucket": "skinbuddy-39604.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396073908172:android:76a5ba43aa209eaba74f69",
+        "android_client_info": {
+          "package_name": "com.skinbuddy.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "396073908172-ie2jhia9dj2oa8c3c6veju1svacldb7i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.skinbuddy.app",
+            "certificate_hash": "8127f55925caf4a8f4398c0ed93999f9fbf50ad7"
+          }
+        },
+        {
+          "client_id": "396073908172-ptilerujjeck6o209ssom0cfvau63lqq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-9XKfvq7YXVPHFHUG4WYolYKdN_TUlms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "396073908172-ptilerujjeck6o209ssom0cfvau63lqq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "396073908172-ufku0vu83n9p55dsui1rguegpb787u5r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.skinbuddy.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

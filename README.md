@@ -34,13 +34,29 @@ flowchart TD
 - Install the Flutter SDK plugin in Android Studio Marketplace
 - Run `flutter pub get`
 
-## Start App
-- Run `flutter run`
-
 ## Firebase
-- Add platform Firebase config files and run `flutterfire configure`.
-- Anonymous auth is used for triage record write operations.
-- Records are stored at `users/{uid}/triage_records/{recordId}`.
+- Install Firebase CLI `npm install -g firebase-tools`
+- Install FlutterFire CLI `dart pub global activate flutterfire_cli` and add to PATH
+- Login to Firebase `firebase login`
+- Add the configuration file as `lib/firebase_options.dart`
+- Anonymous auth is used for triage record write operations
+- Records are stored using the following structure `users/{uid}/triage_records/{recordId}`
+
+Ex.
+```
+users
+   └── test_uid
+       └── triage_records
+           └── record_1
+```
+
+Each triage record includes:
+- body_part
+- notes
+- predicted_group
+- timestamp
+- triage_level
+- urgency
 
 ## ML
 cd ml
@@ -49,6 +65,9 @@ python src/train.py
 python src/convert_to_tflite.py
 
 Copy `ml/models/model.tflite` into `assets/models/model.tflite` after conversion.
+
+## Start App
+- Run `flutter run`
 
 ## Safety
 - SkinBuddy provides triage recommendations only.
