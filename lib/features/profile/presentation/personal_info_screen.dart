@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/services/profile_store.dart';
 import '../../../core/theme/app_theme.dart';
@@ -20,25 +22,62 @@ class PersonalInfoScreen extends StatefulWidget {
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final _store = ProfileStore.instance;
-  late final TextEditingController _nameController;
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
   late DateTime _dateOfBirth;
   late String _skinType;
+  bool _isSaving = false;
+  bool _isLoadingProfile = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: _store.fullName);
+    _firstNameController = TextEditingController(text: _store.firstName);
+    _lastNameController = TextEditingController(text: _store.lastName);
     _emailController = TextEditingController(text: _store.email);
     _dateOfBirth = _store.dateOfBirth;
     _skinType = _store.skinType;
+    _loadUserProfile();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return;
+    }
+
+    setState(() => _isLoadingProfile = true);
+
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final data = snapshot.data();
+      if (!mounted || data == null) return;
+      setState(() {
+        _firstNameController.text =
+            (data['first_name'] as String? ?? '').trim();
+        _lastNameController.text = (data['last_name'] as String? ?? '').trim();
+        _emailController.text = (data['email'] as String? ?? '').trim();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to load profile right now.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingProfile = false);
+      }
+    }
   }
 
   Future<void> _handlePickDate() async {
@@ -52,18 +91,58 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     setState(() => _dateOfBirth = picked);
   }
 
-  void _handleSave() {
-    _store.fullName = _nameController.text;
-    _store.email = _emailController.text;
+  Future<void> _handleSave() async {
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final email = _emailController.text.trim();
+
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all required fields.')),
+      );
+      return;
+    }
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in again to save changes.')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    _store.firstName = firstName;
+    _store.lastName = lastName;
+    _store.email = email;
     _store.dateOfBirth = _dateOfBirth;
     _store.skinType = _skinType;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Changes saved'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+      }, SetOptions(merge: true));
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Changes saved'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to save profile right now.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
   String get _formattedDate =>
@@ -94,9 +173,22 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _buildTextField(
-                      label: 'Full Name',
-                      controller: _nameController,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            label: 'First Name',
+                            controller: _firstNameController,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: _buildTextField(
+                            label: 'Last Name',
+                            controller: _lastNameController,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildTextField(
@@ -110,10 +202,21 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     _buildSkinTypeField(),
                     const SizedBox(height: AppSpacing.xl),
                     FilledButton(
-                      onPressed: _handleSave,
-                      child: const Text('Save Changes'),
+                      onPressed: _isSaving ? null : _handleSave,
+                      child: _isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Save Changes'),
                     ),
                     const SizedBox(height: AppSpacing.xl),
+                    if (_isLoadingProfile)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: AppSpacing.md),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
                   ],
                 ),
               ),
