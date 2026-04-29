@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../auth/presentation/login_screen.dart';
@@ -10,8 +11,57 @@ import 'personal_info_screen.dart';
 import 'privacy_settings_screen.dart';
 import 'terms_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String firstName = '';
+  String lastName = '';
+  String email = '';
+  bool isLoadingProfile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      setState(() {
+        isLoadingProfile = false;
+      });
+      return;
+    }
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      final data = snapshot.data();
+
+      if (data != null && mounted) {
+        setState(() {
+          firstName = (data['first_name'] ?? '').toString();
+          lastName = (data['last_name'] ?? '').toString();
+          email = (data['email'] ?? '').toString();
+          isLoadingProfile = false;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        isLoadingProfile = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +82,11 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
+
               _buildProfileCard(),
+
               const SizedBox(height: AppSpacing.xl),
+
               _buildSection(
                 title: 'Account',
                 items: [
@@ -57,7 +110,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(height: AppSpacing.lg),
+
               _buildSection(
                 title: 'Privacy and Data',
                 items: [
@@ -82,7 +137,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(height: AppSpacing.lg),
+
               _buildSection(
                 title: 'About',
                 items: [
@@ -106,7 +163,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(height: AppSpacing.lg),
+
               _buildSection(
                 title: 'Session',
                 items: [
@@ -145,7 +204,9 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.iconBg.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: AppColors.iconBg.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         children: [
@@ -168,22 +229,26 @@ class ProfileScreen extends StatelessWidget {
                   color: AppColors.brownMedium,
                 ),
               ),
+
               const SizedBox(width: AppSpacing.md),
-              const Column(
+
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Alice Williams',
-                    style: TextStyle(
+                    isLoadingProfile
+                        ? 'Loading...'
+                        : '$firstName $lastName',
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'alicewilliams@gmail.com',
-                    style: TextStyle(
+                    isLoadingProfile ? '' : email,
+                    style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.primary,
                     ),
@@ -192,14 +257,25 @@ class ProfileScreen extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: AppSpacing.md),
-          const Divider(color: AppColors.iconBg, height: 1),
+          const Divider(
+            color: AppColors.iconBg,
+            height: 1,
+          ),
           const SizedBox(height: AppSpacing.md),
+
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _StatItem(value: '4', label: 'Total Scans'),
-              _StatItem(value: '2', label: 'This Month'),
+              _StatItem(
+                value: '4',
+                label: 'Total Scans',
+              ),
+              _StatItem(
+                value: '2',
+                label: 'This Month',
+              ),
               _StatusItem(),
             ],
           ),
@@ -224,15 +300,19 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
+
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.iconBg.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: AppColors.iconBg.withValues(alpha: 0.5),
+            ),
           ),
           child: Column(
             children: List.generate(items.length, (i) {
               final item = items[i];
+
               return Column(
                 children: [
                   if (i > 0)
@@ -270,7 +350,9 @@ class ProfileScreen extends StatelessWidget {
                   ? Colors.redAccent
                   : AppColors.brownMedium,
             ),
+
             const SizedBox(width: AppSpacing.sm),
+
             Expanded(
               child: Text(
                 item.label,
@@ -283,6 +365,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
+
             const Icon(
               Icons.chevron_right,
               size: 20,
@@ -310,7 +393,10 @@ class _MenuItem {
 }
 
 class _StatItem extends StatelessWidget {
-  const _StatItem({required this.value, required this.label});
+  const _StatItem({
+    required this.value,
+    required this.label,
+  });
 
   final String value;
   final String label;
@@ -347,7 +433,11 @@ class _StatusItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Column(
       children: [
-        Icon(Icons.check_circle, size: 22, color: AppColors.greenText),
+        Icon(
+          Icons.check_circle,
+          size: 22,
+          color: AppColors.greenText,
+        ),
         SizedBox(height: 4),
         Text(
           'All Clear',
