@@ -22,12 +22,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String firstName = '';
   String lastName = '';
   String email = '';
+  int totalScans = 0;
+  int thisMonthScans = 0;
   bool isLoadingProfile = true;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadScanCounts();
   }
 
   Future<void> _loadUserProfile() async {
@@ -61,6 +64,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
         isLoadingProfile = false;
       });
     }
+  }
+
+  Future<void> _loadScanCounts() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      final scansSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('triage_records')
+          .get();
+
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      int monthCount = 0;
+
+      for (final doc in scansSnapshot.docs) {
+        final data = doc.data();
+        final timestamp = data['created_at'] as Timestamp?;
+        if (timestamp != null && timestamp.toDate().isAfter(startOfMonth)) {
+          monthCount++;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          totalScans = scansSnapshot.docs.length;
+          thisMonthScans = monthCount;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -265,18 +300,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
 
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _StatItem(
-                value: '4',
+                value: '$totalScans',
                 label: 'Total Scans',
               ),
               _StatItem(
-                value: '2',
+                value: '$thisMonthScans',
                 label: 'This Month',
               ),
-              _StatusItem(),
+              const _StatusItem(),
             ],
           ),
         ],
