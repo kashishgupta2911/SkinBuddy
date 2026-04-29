@@ -1,8 +1,64 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../history/domain/triage_record.dart';
 import '../../scan/presentation/scan_screen.dart';
 import 'quick_tip_detail_screen.dart';
+
+class _ScanEntry {
+  const _ScanEntry({
+    required this.location,
+    required this.date,
+    required this.tag,
+    required this.tagColor,
+    required this.tagTextColor,
+  });
+
+  final String location;
+  final String date;
+  final String tag;
+  final Color tagColor;
+  final Color tagTextColor;
+
+  factory _ScanEntry.fromRecord(TriageRecord record) {
+    final urgencyText = record.urgency.trim();
+    final triageText = record.triageLevel.trim();
+    final isUrgent = urgencyText.toLowerCase().contains('urgent') &&
+        urgencyText.toLowerCase() != 'low urgency';
+
+    return _ScanEntry(
+      location: record.bodyPart,
+      date: _formatTimestamp(record.timestamp),
+      tag: urgencyText.isNotEmpty
+          ? urgencyText
+          : (triageText.isNotEmpty ? triageText : 'No triage level'),
+      tagColor: isUrgent ? AppColors.orangeChip : AppColors.greenChip,
+      tagTextColor: isUrgent ? AppColors.orangeText : AppColors.greenText,
+    );
+  }
+
+  static String _formatTimestamp(DateTime timestamp) {
+    const months = <String>[
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    final month = months[timestamp.month - 1];
+    return '$month ${timestamp.day}, ${timestamp.year}';
+  }
+}
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -104,23 +160,77 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        _buildScanCard(
-          location: 'Left cheek',
-          date: 'April 10, 2026',
-          tag: 'Low urgency',
-          tagColor: AppColors.greenChip,
-          tagTextColor: AppColors.greenText,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _buildScanCard(
-          location: 'Forearm',
-          date: 'April 5, 2026',
-          tag: 'Monitor closely',
-          tagColor: AppColors.orangeChip,
-          tagTextColor: AppColors.orangeText,
+        StreamBuilder<List<TriageRecord>>(
+          stream: _recentScansStream(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Text(
+                'No recent scans yet',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              );
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final entries = (snapshot.data ?? const <TriageRecord>[])
+                .take(3)
+                .map(_ScanEntry.fromRecord)
+                .toList(growable: false);
+
+            if (entries.isEmpty) {
+              return const Text(
+                'No recent scans yet',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              );
+            }
+
+            return Column(
+              children: List.generate(entries.length, (index) {
+                final entry = entries[index];
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index == entries.length - 1 ? 0 : AppSpacing.sm,
+                  ),
+                  child: _buildScanCard(
+                    location: entry.location,
+                    date: entry.date,
+                    tag: entry.tag,
+                    tagColor: entry.tagColor,
+                    tagTextColor: entry.tagTextColor,
+                  ),
+                );
+              }),
+            );
+          },
         ),
       ],
     );
+  }
+
+  Stream<List<TriageRecord>> _recentScansStream() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return Stream.value(const <TriageRecord>[]);
+    }
+
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('triage_records')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          final records = snapshot.docs
+              .map(TriageRecord.fromFirestore)
+              .toList(growable: false);
+          records.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return records;
+        });
   }
 
   Widget _buildScanCard({
