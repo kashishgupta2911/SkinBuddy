@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../auth/presentation/login_screen.dart';
 import 'app_info_screen.dart';
 import 'delete_data_screen.dart';
 import 'notifications_screen.dart';
@@ -104,6 +106,30 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
+              _buildSection(
+                title: 'Session',
+                items: [
+                  _MenuItem(
+                    icon: Icons.logout,
+                    label: 'Log Out',
+                    isDestructive: true,
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+
+                      if (context.mounted) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                              (_) => false,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+
               const SizedBox(height: AppSpacing.xl),
             ],
           ),
