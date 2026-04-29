@@ -39,7 +39,6 @@ flowchart TD
 - Install FlutterFire CLI `dart pub global activate flutterfire_cli` and add to PATH
 - Login to Firebase `firebase login`
 - Add the configuration file as `lib/firebase_options.dart`
-- Anonymous auth is used for triage record write operations
 - Records are stored using the following structure `users/{uid}/triage_records/{recordId}`
 
 Ex.
