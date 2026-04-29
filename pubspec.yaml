@@ -30,3 +30,4 @@ flutter:
     - assets/onboarding/
     - assets/models/model.tflite
     - assets/models/labels.txt
+    - assets/auth/

@@ -5,9 +5,7 @@ import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../shell/app_shell.dart';
 import 'signup_screen.dart';
-
-const _googleIconUrl =
-    'https://www.figma.com/api/mcp/asset/c5c5271c-b469-4cea-9a59-e82377ed5252';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -446,15 +444,10 @@ class _SecondaryAuthButton extends StatelessWidget {
         ),
         foregroundColor: const Color(0xFF5A4A42),
       ),
-      icon: Image.network(
-        _googleIconUrl,
+      icon: SvgPicture.asset(
+        'assets/auth/google.svg',
         width: 20,
         height: 20,
-        errorBuilder: (_, __, ___) => const Icon(
-          Icons.g_mobiledata_rounded,
-          size: 24,
-          color: Color(0xFFDB4437),
-        ),
       ),
       label: Text(
         label,

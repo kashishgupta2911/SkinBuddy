@@ -5,9 +5,8 @@ import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../shell/app_shell.dart';
 import 'login_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-const _googleIconUrl =
-    'https://www.figma.com/api/mcp/asset/2651106f-c1c6-4003-a329-3b93455262e1';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -248,15 +247,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           foregroundColor: const Color(0xFF5A4A42),
                         ),
-                        icon: Image.network(
-                          _googleIconUrl,
+                        icon: SvgPicture.asset(
+                          'assets/auth/google.svg',
                           width: 20,
                           height: 20,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.g_mobiledata_rounded,
-                            size: 24,
-                            color: Color(0xFFDB4437),
-                          ),
                         ),
                         label: const Text(
                           'Continue with Google',
