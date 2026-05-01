@@ -30,6 +30,7 @@ class AuthService {
     required String lastName,
     required String email,
     required String password,
+    required String ageRange, // added this
   }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
@@ -41,6 +42,7 @@ class AuthService {
       firstName: firstName,
       lastName: lastName,
       email: email,
+      ageRange: ageRange, // added this
       includeCreatedAt: true,
     );
 
@@ -76,6 +78,7 @@ class AuthService {
         firstName: names.$1,
         lastName: names.$2,
         email: user.email ?? '',
+        ageRange: null, // Google signup doesn't ask age yet
         includeCreatedAt:
         userCredential.additionalUserInfo?.isNewUser ?? false,
       );
@@ -95,12 +98,17 @@ class AuthService {
     required String lastName,
     required String email,
     required bool includeCreatedAt,
+    String? ageRange, // added this
   }) async {
     final payload = <String, dynamic>{
       'first_name': firstName.trim(),
       'last_name': lastName.trim(),
       'email': email.trim(),
     };
+
+    if (ageRange != null) {
+      payload['age_range'] = ageRange;
+    }
 
     if (includeCreatedAt) {
       payload['created_at'] = FieldValue.serverTimestamp();

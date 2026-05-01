@@ -1,12 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../shell/app_shell.dart';
 import 'login_screen.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+const List<String> _ageRanges = [
+  'Under 18',
+  '18-29',
+  '30-39',
+  '40-49',
+  '50-59',
+  '60-69',
+  '70-79',
+  '80+',
+];
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,14 +27,18 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _authService = AuthService();
+
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
+
   bool _isLoading = false;
   String? _errorText;
+  String? _ageRange;
 
   @override
   void dispose() {
@@ -38,7 +52,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _handleCreateAccount() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_ageRange == null) {
+      setState(() {
+        _errorText = 'Please select your age range.';
+      });
+      return;
+    }
+
     FocusScope.of(context).unfocus();
+
     setState(() {
       _isLoading = true;
       _errorText = null;
@@ -46,29 +69,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       await _authService.createUserWithEmailAndPassword(
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
-        email: _emailController.text,
-        password: _passwordController.text,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        ageRange: _ageRange!,
       );
+
       if (!mounted) return;
+
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AppShell()),
-        (_) => false,
+            (_) => false,
       );
     } on FirebaseAuthException catch (e) {
-      setState(() => _errorText = _friendlyAuthError(e));
+      setState(() {
+        _errorText = _friendlyAuthError(e);
+      });
     } catch (_) {
-      setState(() => _errorText = 'Unable to create your account right now.');
+      setState(() {
+        _errorText = 'Unable to create your account right now.';
+      });
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
     FocusScope.of(context).unfocus();
+
     setState(() {
       _isLoading = true;
       _errorText = null;
@@ -76,18 +109,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       await _authService.signInWithGoogle();
+
       if (!mounted) return;
+
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AppShell()),
-        (_) => false,
+            (_) => false,
       );
     } on FirebaseAuthException catch (e) {
-      setState(() => _errorText = _friendlyAuthError(e));
+      setState(() {
+        _errorText = _friendlyAuthError(e);
+      });
     } catch (_) {
-      setState(() => _errorText = 'Unable to continue with Google.');
+      setState(() {
+        _errorText = 'Unable to continue with Google.';
+      });
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -103,6 +144,56 @@ class _SignUpScreenState extends State<SignUpScreen> {
       default:
         return e.message ?? 'Unable to create account right now.';
     }
+  }
+
+  Widget _buildAgeRangeField() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xCCFFFFFF),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0x99FFFFFF),
+          width: 0.6,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _ageRange,
+          hint: const Text(
+            'Select age range',
+            style: TextStyle(
+              fontSize: 15,
+              color: Color(0xFFB89B88),
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          isExpanded: true,
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            color: Color(0xFFA46A43),
+          ),
+          items: _ageRanges.map((range) {
+            return DropdownMenuItem<String>(
+              value: range,
+              child: Text(
+                range,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF5A4A42),
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _ageRange = value;
+            });
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -122,7 +213,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+              ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 345),
                 child: Form(
@@ -140,7 +233,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           color: Color(0xFFC27A2B),
                         ),
                       ),
+
                       const SizedBox(height: AppSpacing.sm),
+
                       const Text(
                         'Helpful support for your skin.\nConfidence for your care.',
                         textAlign: TextAlign.center,
@@ -151,16 +246,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+
                       const SizedBox(height: 40),
+
                       Row(
                         children: [
                           Expanded(
                             child: _InputField(
                               controller: _firstNameController,
                               hintText: 'First name',
-                              validator: (value) => (value ?? '').trim().isEmpty
-                                  ? 'Required'
-                                  : null,
+                              validator: (value) {
+                                if ((value ?? '').trim().isEmpty) {
+                                  return 'Required';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -168,28 +268,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             child: _InputField(
                               controller: _lastNameController,
                               hintText: 'Last name',
-                              validator: (value) => (value ?? '').trim().isEmpty
-                                  ? 'Required'
-                                  : null,
+                              validator: (value) {
+                                if ((value ?? '').trim().isEmpty) {
+                                  return 'Required';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                         ],
                       ),
+
                       const SizedBox(height: AppSpacing.md),
+
                       _InputField(
                         controller: _emailController,
                         hintText: 'Email address',
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           final email = value?.trim() ?? '';
-                          if (email.isEmpty) return 'Email is required.';
+
+                          if (email.isEmpty) {
+                            return 'Email is required.';
+                          }
+
                           if (!email.contains('@')) {
                             return 'Enter a valid email.';
                           }
+
                           return null;
                         },
                       ),
+
                       const SizedBox(height: AppSpacing.md),
+
+                      _buildAgeRangeField(),
+
+                      const SizedBox(height: AppSpacing.md),
+
                       _InputField(
                         controller: _passwordController,
                         hintText: 'Password',
@@ -201,7 +317,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                       ),
+
                       const SizedBox(height: AppSpacing.md),
+
                       _InputField(
                         controller: _confirmPasswordController,
                         hintText: 'Confirm password',
@@ -210,13 +328,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           if ((value ?? '').isEmpty) {
                             return 'Confirm your password.';
                           }
+
                           if (value != _passwordController.text) {
                             return 'Passwords do not match.';
                           }
+
                           return null;
                         },
                       ),
+
                       const SizedBox(height: AppSpacing.md),
+
                       if (_errorText != null) ...[
                         Text(
                           _errorText!,
@@ -228,18 +350,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                       ],
+
                       _PrimaryButton(
                         label: 'Create Account',
                         loading: _isLoading,
-                        onPressed: _isLoading ? null : _handleCreateAccount,
+                        onPressed:
+                        _isLoading ? null : _handleCreateAccount,
                       ),
+
                       const SizedBox(height: AppSpacing.lg),
+
                       const _OrDivider(),
+
                       const SizedBox(height: AppSpacing.lg),
+
                       OutlinedButton.icon(
-                        onPressed: _isLoading ? null : _handleGoogleSignIn,
+                        onPressed:
+                        _isLoading ? null : _handleGoogleSignIn,
                         style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 56),
+                          minimumSize: const Size(
+                            double.infinity,
+                            56,
+                          ),
                           backgroundColor: const Color(0xCCFFFFFF),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
@@ -258,31 +390,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         label: const Text(
                           'Continue with Google',
                           style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w500),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
+
                       const SizedBox(height: AppSpacing.lg),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
                             'Already have an account? ',
                             style: TextStyle(
-                                fontSize: 14, color: Color(0xFF8A7569)),
+                              fontSize: 14,
+                              color: Color(0xFF8A7569),
+                            ),
                           ),
                           TextButton(
                             onPressed: _isLoading
                                 ? null
-                                : () => Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                        builder: (_) => const LoginScreen(),
-                                      ),
-                                    ),
+                                : () {
+                              Navigator.of(context)
+                                  .pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                  const LoginScreen(),
+                                ),
+                              );
+                            },
                             style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFA46A43),
+                              foregroundColor:
+                              const Color(0xFFA46A43),
                               padding: EdgeInsets.zero,
                               minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              tapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                             ),
                             child: const Text(
                               'Login',
@@ -330,18 +474,29 @@ class _InputField extends StatelessWidget {
       validator: validator,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(fontSize: 15, color: Color(0xFFB89B88)),
+        hintStyle: const TextStyle(
+          fontSize: 15,
+          color: Color(0xFFB89B88),
+        ),
         filled: true,
         fillColor: const Color(0xCCFFFFFF),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: Color(0x99FFFFFF), width: 0.6),
+          borderSide: const BorderSide(
+            color: Color(0x99FFFFFF),
+            width: 0.6,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 1,
+          ),
         ),
       ),
     );
@@ -365,7 +520,10 @@ class _PrimaryButton extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
-          colors: [Color(0xFFB8774A), Color(0xFFA46A43)],
+          colors: [
+            Color(0xFFB8774A),
+            Color(0xFFA46A43),
+          ],
         ),
         boxShadow: const [
           BoxShadow(
@@ -390,21 +548,24 @@ class _PrimaryButton extends StatelessWidget {
             child: Center(
               child: loading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  valueColor:
+                  AlwaysStoppedAnimation<Color>(
+                    Colors.white,
+                  ),
+                ),
+              )
                   : Text(
-                      label,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
         ),
@@ -427,10 +588,15 @@ class _OrDivider extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+          ),
           child: Text(
             'or',
-            style: TextStyle(fontSize: 13, color: Color(0xFFB89B88)),
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFFB89B88),
+            ),
           ),
         ),
         Expanded(
