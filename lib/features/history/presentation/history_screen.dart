@@ -12,6 +12,7 @@ class _ScanEntry {
     required this.tag,
     required this.tagColor,
     required this.tagTextColor,
+    required this.predictedGroup,
   });
 
   final String location;
@@ -19,6 +20,7 @@ class _ScanEntry {
   final String tag;
   final Color tagColor;
   final Color tagTextColor;
+  final String predictedGroup;
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
     final triageText = record.triageLevel.trim();
@@ -33,7 +35,7 @@ class _ScanEntry {
 
     switch (triageKey) {
       case 'urgent':
-        tagColor = AppColors.redChip; // red styling in your theme
+        tagColor = AppColors.redChip;
         tagTextColor = AppColors.redText;
         break;
 
@@ -55,6 +57,7 @@ class _ScanEntry {
       tag: resolvedTriage,
       tagColor: tagColor,
       tagTextColor: tagTextColor,
+      predictedGroup: record.predictedGroup,
     );
   }
 
@@ -359,6 +362,14 @@ class _TimelineItem extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   entry.dateTime,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Likely: ${entry.predictedGroup}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
