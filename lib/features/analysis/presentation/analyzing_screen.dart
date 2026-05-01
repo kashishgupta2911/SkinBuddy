@@ -137,7 +137,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
             _buildAnimatedLogo(),
             const SizedBox(height: AppSpacing.xxl),
             const Text(
-              'Analyzing your photo',
+              'Analyzing your skin',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
