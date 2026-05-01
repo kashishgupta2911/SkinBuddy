@@ -64,6 +64,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         decision: TriageDecision(
           outcome: TriageOutcome.nonurgent,
           reason: 'Analysis pending model integration.',
+          disclaimer: 'SkinBuddy is a triage support tool and does not provide a medical diagnosis.',
         ),
 
         imagePath: widget.imagePath,

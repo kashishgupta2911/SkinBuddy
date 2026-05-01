@@ -20,8 +20,13 @@ class CaptureController {
       prediction: prediction,
       decision: decision,
       imagePath: imagePath,
-      modelVersion: 'mobilenetv2-skinbuddy-v1',
-      consentToStoreImagePath: false,
+      relatedCategory: '',
+      texture: '',
+      bodyArea: [],
+      conditionSymptoms: [],
+      otherSymptoms: [],
+      duration: '',
+      nextSteps: [],
     );
 
     return {
