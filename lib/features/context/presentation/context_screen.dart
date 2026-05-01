@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -89,6 +91,38 @@ class _ContextScreenState extends State<ContextScreen> {
   final Set<String> _selectedConditionSymptoms = {};
   final Set<String> _selectedOtherSymptoms = {};
   String? _selectedDuration;
+  bool _isUnder18 = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAgeRange();
+  }
+
+  Future<void> _checkAgeRange() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      final ageRange =
+          (snapshot.data()?['age_range'] as String? ?? '').trim().toLowerCase();
+
+      final isMinor = ageRange == 'under 18' ||
+          ageRange == '0–12' ||
+          ageRange == '0-12' ||
+          ageRange == '13–17' ||
+          ageRange == '13-17';
+
+      if (mounted && isMinor) {
+        setState(() => _isUnder18 = true);
+      }
+    } catch (_) {}
+  }
 
   void _handleContinue() {
     Navigator.of(context).push(
@@ -133,6 +167,11 @@ class _ContextScreenState extends State<ContextScreen> {
                   children: [
                     const SizedBox(height: AppSpacing.md),
                     _buildPhotoPreview(),
+
+                    if (_isUnder18) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _buildUnder18Disclaimer(),
+                    ],
 
                     const SizedBox(height: AppSpacing.xl),
                     _buildSectionTitle('About the condition'),
@@ -261,6 +300,51 @@ class _ContextScreenState extends State<ContextScreen> {
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnder18Disclaimer() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.orangeChip,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.orangeText.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.orangeText,
+            size: 22,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                  height: 1.5,
+                ),
+                children: [
+                  TextSpan(
+                    text: 'Age Notice: ',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(
+                    text:
+                        'This tool is currently designed for adult skin conditions (18+). '
+                        'For children and teenagers, professional medical evaluation is recommended.',
+                  ),
+                ],
               ),
             ),
           ),
