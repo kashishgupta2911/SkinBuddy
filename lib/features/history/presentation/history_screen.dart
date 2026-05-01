@@ -355,21 +355,21 @@ class _TimelineItem extends StatelessWidget {
             child: entry.imageUrl.isNotEmpty
                 ? Image.network(
               entry.imageUrl,
-              width: 52,
-              height: 52,
+              width: 64,
+              height: 96,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  width: 52,
-                  height: 52,
+                  width: 64,
+                  height: 96,
                   color: AppColors.iconBg,
                   child: const Icon(Icons.image_not_supported),
                 );
               },
             )
                 : Container(
-              width: 52,
-              height: 52,
+              width: 64,
+              height: 96,
               color: AppColors.iconBg,
               child: const Icon(Icons.image),
             ),
