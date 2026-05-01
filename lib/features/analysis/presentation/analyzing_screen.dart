@@ -100,7 +100,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
                 );
               },
               child: const Text(
-                'almost there...',
+                'SkinBuddy is evaluating...',
                 style: TextStyle(
                   fontSize: 16,
                   color: AppColors.primary,
