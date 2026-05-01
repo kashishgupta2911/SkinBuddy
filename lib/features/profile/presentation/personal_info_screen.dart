@@ -5,23 +5,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/profile_store.dart';
 import '../../../core/theme/app_theme.dart';
 
-const List<String> _skinTypes = [
-  'Normal',
-  'Dry',
-  'Oily',
-  'Combination',
-  'Sensitive',
-];
-
 const List<String> _ageRanges = [
-  '0–12',
-  '13–17',
-  '18–24',
-  '25–34',
-  '35–44',
-  '45–54',
-  '55–64',
-  '65+',
+  'Under 18',
+  '18-29',
+  '30-39',
+  '40-49',
+  '50-59',
+  '60-69',
+  '70-79',
+  '80+',
 ];
 
 class PersonalInfoScreen extends StatefulWidget {
@@ -38,8 +30,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
 
-  late String _skinType;
-  late String _ageRange;
+  String? _ageRange;
 
   bool _isSaving = false;
   bool _isLoadingProfile = false;
@@ -59,13 +50,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     _emailController = TextEditingController(
       text: _store.email,
     );
-
-    // MUST set defaults first
-    _skinType = _store.skinType.isNotEmpty
-        ? _store.skinType
-        : 'Normal';
-
-    _ageRange = '18–24';
 
     _loadUserProfile();
   }
@@ -102,18 +86,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             (data['email'] as String? ?? '').trim();
 
         final savedAgeRange =
-        (data['age_range'] as String? ?? '18–24').trim();
+        (data['age_range'] as String?)?.trim();
 
         _ageRange = _ageRanges.contains(savedAgeRange)
             ? savedAgeRange
-            : '18–24';
-
-        final savedSkinType =
-        (data['skin_type'] as String? ?? 'Normal').trim();
-
-        _skinType = _skinTypes.contains(savedSkinType)
-            ? savedSkinType
-            : 'Normal';
+            : null;
       });
     } catch (_) {
       if (!mounted) return;
@@ -144,6 +121,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       return;
     }
 
+    if (_ageRange == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your age range.'),
+        ),
+      );
+      return;
+    }
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,7 +145,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     _store.firstName = firstName;
     _store.lastName = lastName;
     _store.email = email;
-    _store.skinType = _skinType;
 
     try {
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
@@ -167,7 +152,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         'last_name': lastName,
         'email': email,
         'age_range': _ageRange,
-        'skin_type': _skinType,
       }, SetOptions(merge: true));
 
       if (!mounted) return;
@@ -250,10 +234,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     const SizedBox(height: AppSpacing.lg),
 
                     _buildAgeRangeField(),
-
-                    const SizedBox(height: AppSpacing.lg),
-
-                    _buildSkinTypeField(),
 
                     const SizedBox(height: AppSpacing.xl),
 
@@ -423,61 +403,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               onChanged: (value) {
                 if (value == null) return;
                 setState(() => _ageRange = value);
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSkinTypeField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Skin Type',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.brownLight.withValues(alpha: 0.5),
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _skinType,
-              isExpanded: true,
-              style: const TextStyle(
-                fontSize: 15,
-                color: AppColors.textPrimary,
-              ),
-              icon: const Icon(
-                Icons.keyboard_arrow_down,
-                color: AppColors.brownMedium,
-              ),
-              items: _skinTypes
-                  .map(
-                    (type) => DropdownMenuItem(
-                  value: type,
-                  child: Text(type),
-                ),
-              )
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() => _skinType = value);
               },
             ),
           ),
