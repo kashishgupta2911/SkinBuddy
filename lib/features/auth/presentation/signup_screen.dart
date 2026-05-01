@@ -146,6 +146,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  Widget _buildUnder18Disclaimer() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDE8D0),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFB8703A).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xFFB8703A),
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF5A4A42),
+                  height: 1.5,
+                ),
+                children: [
+                  TextSpan(
+                    text: 'Age Notice: ',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(
+                    text:
+                        'This tool is currently designed for adult skin conditions (18+). '
+                        'For children and teenagers, professional medical evaluation is recommended.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAgeRangeField() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -303,6 +348,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: AppSpacing.md),
 
                       _buildAgeRangeField(),
+
+                      if (_ageRange == 'Under 18') ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildUnder18Disclaimer(),
+                      ],
 
                       const SizedBox(height: AppSpacing.md),
 
