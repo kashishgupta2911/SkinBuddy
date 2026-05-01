@@ -381,6 +381,8 @@ class _TimelineItem extends StatelessWidget {
               children: [
                 Text(
                   entry.location,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

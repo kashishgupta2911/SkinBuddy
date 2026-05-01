@@ -361,6 +361,8 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Text(
                   location,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
