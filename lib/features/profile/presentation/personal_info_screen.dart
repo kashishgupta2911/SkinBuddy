@@ -230,6 +230,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
                     _buildAgeRangeField(),
 
+                    if (_ageRange == 'Under 18') ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildUnder18Disclaimer(),
+                    ],
+
                     const SizedBox(height: AppSpacing.xl),
 
                     FilledButton(
@@ -348,6 +353,51 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildUnder18Disclaimer() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.orangeChip,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.orangeText.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.orangeText,
+            size: 22,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                  height: 1.5,
+                ),
+                children: [
+                  TextSpan(
+                    text: 'Age Notice: ',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(
+                    text:
+                        'This tool is currently designed for adult skin conditions (18+). '
+                        'For children and teenagers, professional medical evaluation is recommended.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
