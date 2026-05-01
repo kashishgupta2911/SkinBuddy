@@ -14,6 +14,7 @@ class _ScanEntry {
     required this.tag,
     required this.tagColor,
     required this.tagTextColor,
+    required this.imageUrl,
   });
 
   final String location;
@@ -21,6 +22,7 @@ class _ScanEntry {
   final String tag;
   final Color tagColor;
   final Color tagTextColor;
+  final String imageUrl;
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
     final triageText = record.triageLevel.trim();
@@ -57,6 +59,7 @@ class _ScanEntry {
       tag: resolvedTriage,
       tagColor: tagColor,
       tagTextColor: tagTextColor,
+      imageUrl: record.imgUrl,
     );
   }
 
@@ -278,6 +281,7 @@ class HomeScreen extends StatelessWidget {
                     tag: entry.tag,
                     tagColor: entry.tagColor,
                     tagTextColor: entry.tagTextColor,
+                    imageUrl: entry.imageUrl,
                   ),
                 );
               }),
@@ -315,6 +319,7 @@ class HomeScreen extends StatelessWidget {
     required String tag,
     required Color tagColor,
     required Color tagTextColor,
+    required String imageUrl,
   }) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -325,12 +330,28 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+              imageUrl,
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 48,
+                  height: 48,
+                  color: AppColors.iconBg,
+                  child: const Icon(Icons.image_not_supported),
+                );
+              },
+            )
+                : Container(
+              width: 48,
+              height: 48,
               color: AppColors.iconBg,
-              borderRadius: BorderRadius.circular(12),
+              child: const Icon(Icons.image),
             ),
           ),
           const SizedBox(width: AppSpacing.md),

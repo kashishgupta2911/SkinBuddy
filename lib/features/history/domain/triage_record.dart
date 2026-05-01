@@ -8,6 +8,7 @@ class TriageRecord {
     required this.predictedGroup,
     required this.timestamp,
     required this.triageLevel,
+    required this.imgUrl,
   });
 
   final String id;
@@ -16,6 +17,7 @@ class TriageRecord {
   final String predictedGroup;
   final DateTime timestamp;
   final String triageLevel;
+  final String imgUrl;
 
   factory TriageRecord.fromFirestore(
       QueryDocumentSnapshot<Map<String, dynamic>> doc,
@@ -46,6 +48,7 @@ class TriageRecord {
       triageLevel:
       ((data['triage_level'] as String?) ?? (data['triageOutcome'] as String?) ?? '')
           .trim(),
+      imgUrl: (data['img_url'] as String? ?? '').trim(),
     );
   }
 }
