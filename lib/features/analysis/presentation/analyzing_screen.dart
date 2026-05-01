@@ -6,6 +6,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../error/presentation/error_screen.dart';
 import '../../report/presentation/report_screen.dart';
 
+import '../../../core/services/triage_record_service.dart';
+import '../../result/domain/triage_logic.dart';
+import '../../../core/services/inference_service.dart';
+
 class AnalyzingScreen extends StatefulWidget {
   const AnalyzingScreen({
     super.key,
@@ -24,6 +28,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
     with TickerProviderStateMixin {
   late final AnimationController _rotationController;
   late final AnimationController _pulseController;
+  final _triageRecordService = TriageRecordService();
 
   @override
   void initState() {
@@ -41,20 +46,68 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   }
 
   Future<void> _startAnalysis() async {
-    // Simulate analysis delay — will wire to real inference later
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
+    try {
+      // Small delay for UX so loading screen feels intentional
+      await Future.delayed(const Duration(seconds: 2));
 
-    // When inference is wired, use real result to decide success/error
-    _navigateToReport();
-  }
+      // Temporary placeholder values until model is connected
+      const placeholderPredictionLabel = 'Awaiting model prediction';
+      const placeholderConfidence = 0.0;
 
-  void _navigateToReport() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ReportScreen(imagePath: widget.imagePath),
-      ),
-    );
+      // Save image + metadata only
+      await _triageRecordService.saveRecord(
+        prediction: PredictionResult(
+          label: placeholderPredictionLabel,
+          confidence: placeholderConfidence,
+        ),
+
+        decision: TriageDecision(
+          outcome: TriageOutcome.nonurgent,
+          reason: 'Analysis pending model integration.',
+        ),
+
+        imagePath: widget.imagePath,
+
+        relatedCategory:
+        widget.contextData['related_category'] ?? '',
+
+        texture:
+        widget.contextData['texture'] ?? '',
+
+        bodyArea:
+        List<String>.from(
+          widget.contextData['body_area'] ?? [],
+        ),
+
+        conditionSymptoms:
+        List<String>.from(
+          widget.contextData['condition_symptoms'] ?? [],
+        ),
+
+        otherSymptoms:
+        List<String>.from(
+          widget.contextData['other_symptoms'] ?? [],
+        ),
+
+        duration:
+        widget.contextData['duration'] ?? '',
+
+        nextSteps: [],
+      );
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ReportScreen(
+            imagePath: widget.imagePath,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _navigateToError();
+    }
   }
 
   // ignore: unused_element
