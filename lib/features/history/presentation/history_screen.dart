@@ -13,6 +13,7 @@ class _ScanEntry {
     required this.tagColor,
     required this.tagTextColor,
     required this.predictedGroup,
+    required this.imageUrl,
   });
 
   final String location;
@@ -21,6 +22,7 @@ class _ScanEntry {
   final Color tagColor;
   final Color tagTextColor;
   final String predictedGroup;
+  final String imageUrl;
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
     final triageText = record.triageLevel.trim();
@@ -58,6 +60,7 @@ class _ScanEntry {
       tagColor: tagColor,
       tagTextColor: tagTextColor,
       predictedGroup: record.predictedGroup,
+      imageUrl: record.imgUrl,
     );
   }
 
@@ -347,6 +350,31 @@ class _TimelineItem extends StatelessWidget {
       ),
       child: Row(
         children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: entry.imageUrl.isNotEmpty
+                ? Image.network(
+              entry.imageUrl,
+              width: 52,
+              height: 52,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 52,
+                  height: 52,
+                  color: AppColors.iconBg,
+                  child: const Icon(Icons.image_not_supported),
+                );
+              },
+            )
+                : Container(
+              width: 52,
+              height: 52,
+              color: AppColors.iconBg,
+              child: const Icon(Icons.image),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
