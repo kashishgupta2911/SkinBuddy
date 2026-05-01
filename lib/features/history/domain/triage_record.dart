@@ -26,8 +26,10 @@ class TriageRecord {
 
     return TriageRecord(
       id: doc.id,
-      bodyPart: (data['body_part'] as String?)?.trim().isNotEmpty == true
-          ? (data['body_part'] as String).trim()
+      bodyPart: (data['body_area'] as List?)?.isNotEmpty == true
+          ? (data['body_area'] as List)
+          .map((e) => e.toString())
+          .join(', ')
           : ((data['label'] as String?)?.trim().isNotEmpty == true
           ? (data['label'] as String).trim()
           : 'Unknown area'),
