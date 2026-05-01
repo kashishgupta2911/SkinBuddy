@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/services/profile_store.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_theme.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
@@ -11,7 +11,6 @@ class PrivacySettingsScreen extends StatefulWidget {
 }
 
 class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
-  final _store = ProfileStore.instance;
   late bool _shareAnonymousData;
   late bool _localStorageOnly;
   late bool _biometricLock;
@@ -19,9 +18,53 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _shareAnonymousData = _store.shareAnonymousData;
-    _localStorageOnly = _store.localStorageOnly;
-    _biometricLock = _store.biometricLock;
+    // defaults aligned with previous ProfileStore values
+    _shareAnonymousData = true;
+    _localStorageOnly = true;
+    _biometricLock = false;
+    _loadPrivacySettings();
+  }
+
+  Future<void> _loadPrivacySettings() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final data = snapshot.data();
+      if (!mounted || data == null) return;
+
+      setState(() {
+        _shareAnonymousData = (data['share_anonymous_data'] as bool?) ?? true;
+        _localStorageOnly = (data['local_storage_only'] as bool?) ?? true;
+        _biometricLock = (data['biometric_lock'] as bool?) ?? false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to load privacy settings right now.')),
+      );
+    }
+  }
+
+  Future<void> _saveSetting(String field, bool value) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in again to save changes.')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({field: value}, SetOptions(merge: true));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to save privacy settings right now.')),
+      );
+    }
   }
 
   @override
@@ -55,8 +98,10 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     subtitle:
                         'Help improve SkinBuddy by sharing anonymized usage data',
                     value: _shareAnonymousData,
-                    onChanged: (v) =>
-                        setState(() => _shareAnonymousData = _store.shareAnonymousData = v),
+                    onChanged: (v) {
+                      setState(() => _shareAnonymousData = v);
+                      _saveSetting('share_anonymous_data', v);
+                    },
                   ),
                   const Divider(
                     color: AppColors.iconBg,
@@ -68,8 +113,10 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     title: 'Local Storage Only',
                     subtitle: 'Store all data on this device only',
                     value: _localStorageOnly,
-                    onChanged: (v) =>
-                        setState(() => _localStorageOnly = _store.localStorageOnly = v),
+                    onChanged: (v) {
+                      setState(() => _localStorageOnly = v);
+                      _saveSetting('local_storage_only', v);
+                    },
                   ),
                 ],
               ),
@@ -83,8 +130,10 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     subtitle:
                         'Require Face ID or Touch ID to open app',
                     value: _biometricLock,
-                    onChanged: (v) =>
-                        setState(() => _biometricLock = _store.biometricLock = v),
+                    onChanged: (v) {
+                      setState(() => _biometricLock = v);
+                      _saveSetting('biometric_lock', v);
+                    },
                   ),
                 ],
               ),
