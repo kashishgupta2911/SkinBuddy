@@ -46,18 +46,6 @@ class TriageRecord {
       triageLevel:
           ((data['triage_level'] as String?) ?? (data['triageOutcome'] as String?) ?? '')
               .trim(),
-      urgency: ((data['urgency'] as String?) ?? _legacyUrgency(data)).trim(),
     );
   }
-
-  static String _legacyUrgency(Map<String, dynamic> data) {
-    final triageOutcome = (data['triageOutcome'] as String?)?.trim().toLowerCase();
-    if (triageOutcome == 'urgent') {
-      return 'Urgent';
-    }
-    if (triageOutcome == 'nonUrgent'.toLowerCase()) {
-      return 'Low urgency';
-    }
-    return '';
-  }
-}
+}r
