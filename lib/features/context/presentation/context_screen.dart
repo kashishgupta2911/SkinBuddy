@@ -5,23 +5,71 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../analysis/presentation/analyzing_screen.dart';
 
-const List<String> _stressEmojis = ['😔', '🙂', '😐', '😟', '😢'];
-const List<String> _sleepOptions = ['Poor', 'Fair', 'Good'];
-const List<String> _durationOptions = [
-  'Less than a week',
-  '1-2 weeks',
-  '2-4 weeks',
-  '1-3 months',
-  'More than 3 months',
-];
 const List<String> _bodyAreas = [
-  'Face',
-  'Neck',
-  'Chest',
-  'Arms',
-  'Hands',
-  'Legs',
-  'Back',
+  'Head or Neck',
+  'Arm',
+  'Palm',
+  'Back of Hand',
+  'Torso (Front)',
+  'Torso (Back)',
+  'Genitalia or Groin',
+  'Buttocks',
+  'Leg',
+  'Foot (Top/Side)',
+  'Foot (Sole)',
+  'Other',
+];
+
+const List<String> _durations = [
+  'One day',
+  'Less than one week',
+  '1–4 weeks',
+  '1–3 months',
+  '3–12 months',
+  'More than one year',
+  'More than five years',
+  'Since childhood',
+  'Unknown',
+];
+
+const List<String> _conditionSymptoms = [
+  'Bothersome appearance',
+  'Bleeding',
+  'Increasing size',
+  'Darkening',
+  'Itching',
+  'Burning',
+  'Pain',
+  'None of these',
+];
+
+const List<String> _otherSymptoms = [
+  'Fever',
+  'Chills',
+  'Fatigue',
+  'Joint pain',
+  'Mouth sores',
+  'Shortness of breath',
+  'None of these',
+];
+
+const List<String> _textures = [
+  'Raised or bumpy',
+  'Flat',
+  'Rough or flaky',
+  'Fluid filled',
+  'Unspecified',
+];
+
+const List<String> _relatedCategories = [
+  'Acne',
+  'Growth or mole',
+  'Hair loss',
+  'Other hair problem',
+  'Nail problem',
+  'Pigmentary problem',
+  'Rash',
+  'Looks healthy',
   'Other',
 ];
 
@@ -35,11 +83,12 @@ class ContextScreen extends StatefulWidget {
 }
 
 class _ContextScreenState extends State<ContextScreen> {
-  int? _selectedStress;
-  int? _selectedSleep;
-  bool? _changedProducts;
-  String? _selectedDuration;
+  String? _selectedCategory;
+  String? _selectedTexture;
   final Set<String> _selectedBodyAreas = {};
+  final Set<String> _selectedConditionSymptoms = {};
+  final Set<String> _selectedOtherSymptoms = {};
+  String? _selectedDuration;
 
   void _handleContinue() {
     Navigator.of(context).push(
@@ -47,11 +96,12 @@ class _ContextScreenState extends State<ContextScreen> {
         builder: (_) => AnalyzingScreen(
           imagePath: widget.imagePath,
           contextData: {
-            'stress': _selectedStress,
-            'sleep': _selectedSleep != null ? _sleepOptions[_selectedSleep!] : null,
-            'changedProducts': _changedProducts,
+            'related_category': _selectedCategory,
+            'texture': _selectedTexture,
+            'body_area': _selectedBodyAreas.toList(),
+            'condition_symptoms': _selectedConditionSymptoms.toList(),
+            'other_symptoms': _selectedOtherSymptoms.toList(),
             'duration': _selectedDuration,
-            'bodyAreas': _selectedBodyAreas.toList(),
           },
         ),
       ),
@@ -83,16 +133,57 @@ class _ContextScreenState extends State<ContextScreen> {
                   children: [
                     const SizedBox(height: AppSpacing.md),
                     _buildPhotoPreview(),
+
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildSectionTitle('About the condition'),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildStressQuestion(),
+                    _buildDropdownQuestion(
+                      title: 'What type of skin issue does it seem like?',
+                      hint: 'Select a category',
+                      value: _selectedCategory,
+                      options: _relatedCategories,
+                      onChanged: (v) => setState(() => _selectedCategory = v),
+                    ),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildSleepQuestion(),
+                    _buildDropdownQuestion(
+                      title: 'What does the affected area look like?',
+                      hint: 'Select texture',
+                      value: _selectedTexture,
+                      options: _textures,
+                      onChanged: (v) => setState(() => _selectedTexture = v),
+                    ),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildSkincareQuestion(),
+                    _buildMultiSelectQuestion(
+                      title: 'Where is the affected area?',
+                      options: _bodyAreas,
+                      selected: _selectedBodyAreas,
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildSectionTitle('Symptoms & Duration'),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildDurationQuestion(),
+                    _buildMultiSelectQuestion(
+                      title: 'Skin Symptoms',
+                      subtitle: 'How the affected area looks or feels',
+                      options: _conditionSymptoms,
+                      selected: _selectedConditionSymptoms,
+                    ),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildBodyAreaQuestion(),
+                    _buildMultiSelectQuestion(
+                      title: 'General Symptoms',
+                      subtitle: 'Symptoms affecting more than just skin',
+                      options: _otherSymptoms,
+                      selected: _selectedOtherSymptoms,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildDropdownQuestion(
+                      title: 'How long has this been present?',
+                      hint: 'Select duration',
+                      value: _selectedDuration,
+                      options: _durations,
+                      onChanged: (v) => setState(() => _selectedDuration = v),
+                    ),
+
                     const SizedBox(height: AppSpacing.xl),
                   ],
                 ),
@@ -178,144 +269,136 @@ class _ContextScreenState extends State<ContextScreen> {
     );
   }
 
-  Widget _buildStressQuestion() {
-    return _QuestionSection(
-      title: 'How stressed have you been lately?',
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(_stressEmojis.length, (i) {
-          final isSelected = _selectedStress == i;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedStress = i),
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color:
-                    isSelected ? AppColors.primary.withValues(alpha: 0.15) : Colors.transparent,
-                border: isSelected
-                    ? Border.all(color: AppColors.primary, width: 2)
-                    : null,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                _stressEmojis[i],
-                style: const TextStyle(fontSize: 26),
-              ),
-            ),
-          );
-        }),
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: AppColors.primary,
       ),
     );
   }
 
-  Widget _buildSleepQuestion() {
-    return _QuestionSection(
-      title: "How's your sleep quality?",
-      child: Row(
-        children: List.generate(_sleepOptions.length, (i) {
-          final isSelected = _selectedSleep == i;
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: i == 0 ? 0 : AppSpacing.sm,
+  Widget _buildDropdownQuestion({
+    required String title,
+    required String hint,
+    required String? value,
+    required List<String> options,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.brownLight),
+            color: AppColors.surface,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              hint: Text(
+                hint,
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
-              child: _ChoiceChipButton(
-                label: _sleepOptions[i],
-                isSelected: isSelected,
-                onTap: () => setState(() => _selectedSleep = i),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.brownMedium,
               ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildSkincareQuestion() {
-    return _QuestionSection(
-      title: 'Have you recently changed any skincare products?',
-      child: Row(
-        children: [
-          Expanded(
-            child: _ChoiceChipButton(
-              label: 'No',
-              isSelected: _changedProducts == false,
-              onTap: () => setState(() => _changedProducts = false),
+              items: options
+                  .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+                  .toList(),
+              onChanged: onChanged,
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _ChoiceChipButton(
-              label: 'Yes',
-              isSelected: _changedProducts == true,
-              onTap: () => setState(() => _changedProducts = true),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMultiSelectQuestion({
+    required String title,
+    String? subtitle,
+    required List<String> options,
+    required Set<String> selected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDurationQuestion() {
-    return _QuestionSection(
-      title: 'How long has this concern been present?',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.brownLight),
-          color: AppColors.surface,
+        const SizedBox(height: AppSpacing.sm),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: options.map((option) {
+            final isSelected = selected.contains(option);
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (isSelected) {
+                    selected.remove(option);
+                  } else {
+                    selected.add(option);
+                  }
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : AppColors.surface,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color:
+                        isSelected ? AppColors.primary : AppColors.brownLight,
+                  ),
+                ),
+                child: Text(
+                  option,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        isSelected ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: _selectedDuration,
-            isExpanded: true,
-            hint: const Text(
-              'Select duration',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            icon: const Icon(
-              Icons.keyboard_arrow_down,
-              color: AppColors.brownMedium,
-            ),
-            items: _durationOptions
-                .map(
-                  (d) => DropdownMenuItem(value: d, child: Text(d)),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => _selectedDuration = v),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBodyAreaQuestion() {
-    return _QuestionSection(
-      title: 'Which area of your body?',
-      child: Wrap(
-        spacing: AppSpacing.sm,
-        runSpacing: AppSpacing.sm,
-        children: _bodyAreas.map((area) {
-          final isSelected = _selectedBodyAreas.contains(area);
-          return _ChoiceChipButton(
-            label: area,
-            isSelected: isSelected,
-            onTap: () {
-              setState(() {
-                if (isSelected) {
-                  _selectedBodyAreas.remove(area);
-                } else {
-                  _selectedBodyAreas.add(area);
-                }
-              });
-            },
-            compact: true,
-          );
-        }).toList(),
-      ),
+      ],
     );
   }
 
@@ -349,75 +432,6 @@ class _ContextScreenState extends State<ContextScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _QuestionSection extends StatelessWidget {
-  const _QuestionSection({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        child,
-      ],
-    );
-  }
-}
-
-class _ChoiceChipButton extends StatelessWidget {
-  const _ChoiceChipButton({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-    this.compact = false,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 16 : 12,
-          vertical: compact ? 10 : 14,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.brownLight,
-          ),
-        ),
-        alignment: compact ? null : Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textPrimary,
-          ),
-        ),
       ),
     );
   }
