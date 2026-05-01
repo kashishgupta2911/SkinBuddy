@@ -26,7 +26,7 @@ class CaptureController {
       conditionSymptoms: [],
       otherSymptoms: [],
       duration: '',
-      nextSteps: [],
+      nextSteps: '',
     );
 
     return {

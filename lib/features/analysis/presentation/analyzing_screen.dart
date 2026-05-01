@@ -93,7 +93,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         duration:
         widget.contextData['duration'] ?? '',
 
-        nextSteps: [],
+        nextSteps: '',
       );
 
       if (!mounted) return;

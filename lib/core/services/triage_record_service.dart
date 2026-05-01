@@ -32,7 +32,7 @@ class TriageRecordService {
     required List<String> otherSymptoms,
     required String duration,
 
-    required List<String> nextSteps,
+    required String nextSteps,
   }) async {
     final user = _auth.currentUser;
 
