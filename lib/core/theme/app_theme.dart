@@ -21,7 +21,7 @@ abstract final class AppColors {
   static const Color textSecondary = Color(0xFF7A6B5A);
   static const Color iconBg = Color(0xFFE8DDD0);
   static const Color navUnselected = Color(0xFFB0A090);
-  static const Color tipCardBg = Color(0xFFF0E8DA);
+  static const Color tipCardBg = Color(0xFFFFFBF8);
 }
 
 abstract final class AppSpacing {
