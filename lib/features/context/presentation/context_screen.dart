@@ -40,7 +40,7 @@ const List<String> _conditionSymptoms = [
   'Itching',
   'Burning',
   'Pain',
-  'No relevant experience',
+  'None of these',
 ];
 
 const List<String> _otherSymptoms = [
@@ -50,7 +50,7 @@ const List<String> _otherSymptoms = [
   'Joint pain',
   'Mouth sores',
   'Shortness of breath',
-  'No relevant symptoms',
+  'None of these',
 ];
 
 const List<String> _textures = [
@@ -138,7 +138,7 @@ class _ContextScreenState extends State<ContextScreen> {
                     _buildSectionTitle('About the condition'),
                     const SizedBox(height: AppSpacing.lg),
                     _buildDropdownQuestion(
-                      title: 'What does it seem like?',
+                      title: 'What type of skin issue does it seem like?',
                       hint: 'Select a category',
                       value: _selectedCategory,
                       options: _relatedCategories,
@@ -146,7 +146,7 @@ class _ContextScreenState extends State<ContextScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildDropdownQuestion(
-                      title: 'Texture / Appearance',
+                      title: 'What does the affected area look like?',
                       hint: 'Select texture',
                       value: _selectedTexture,
                       options: _textures,
@@ -154,7 +154,7 @@ class _ContextScreenState extends State<ContextScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildMultiSelectQuestion(
-                      title: 'Which area of your body?',
+                      title: 'Where is the affected area?',
                       options: _bodyAreas,
                       selected: _selectedBodyAreas,
                     ),
@@ -163,15 +163,15 @@ class _ContextScreenState extends State<ContextScreen> {
                     _buildSectionTitle('Symptoms & Duration'),
                     const SizedBox(height: AppSpacing.lg),
                     _buildMultiSelectQuestion(
-                      title: 'Condition symptoms',
-                      subtitle: 'Related to the appearance and sensation',
+                      title: 'Skin Symptoms',
+                      subtitle: 'How the affected area looks or feels',
                       options: _conditionSymptoms,
                       selected: _selectedConditionSymptoms,
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildMultiSelectQuestion(
-                      title: 'Other symptoms',
-                      subtitle: 'That may also be related',
+                      title: 'General Symptoms',
+                      subtitle: 'Symptoms affecting more than just skin',
                       options: _otherSymptoms,
                       selected: _selectedOtherSymptoms,
                     ),
