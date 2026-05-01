@@ -361,16 +361,16 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.orangeChip,
+        color: AppColors.redChip,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.orangeText.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.redText.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
             Icons.warning_amber_rounded,
-            color: AppColors.orangeText,
+            color: AppColors.redText,
             size: 22,
           ),
           const SizedBox(width: AppSpacing.sm),

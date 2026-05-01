@@ -16,7 +16,6 @@ class TriageRecord {
   final String predictedGroup;
   final DateTime timestamp;
   final String triageLevel;
-  // 'urgency' removed: database does not include this field anymore.
 
   factory TriageRecord.fromFirestore(
       QueryDocumentSnapshot<Map<String, dynamic>> doc,

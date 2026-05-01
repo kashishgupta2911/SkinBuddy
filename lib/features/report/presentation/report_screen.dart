@@ -19,8 +19,8 @@ class ReportScreen extends StatelessWidget {
   final bool isUrgent;
 
   String get _urgencyTag => isUrgent ? 'Urgent' : 'Low urgency';
-  Color get _tagBg => isUrgent ? AppColors.orangeChip : AppColors.greenChip;
-  Color get _tagText => isUrgent ? AppColors.orangeText : AppColors.greenText;
+  Color get _tagBg => isUrgent ? AppColors.redChip : AppColors.greenChip;
+  Color get _tagText => isUrgent ? AppColors.redText : AppColors.greenText;
   String get _urgencySubtext =>
       isUrgent ? 'Consult a professional' : 'Self-care recommended';
 

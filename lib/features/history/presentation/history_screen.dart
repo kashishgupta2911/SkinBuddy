@@ -33,8 +33,8 @@ class _ScanEntry {
 
     switch (triageKey) {
       case 'urgent':
-        tagColor = AppColors.orangeChip; // red styling in your theme
-        tagTextColor = AppColors.orangeText;
+        tagColor = AppColors.redChip; // red styling in your theme
+        tagTextColor = AppColors.redText;
         break;
 
       case 'expedited':

@@ -24,17 +24,48 @@ class _ScanEntry {
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
     final triageText = record.triageLevel.trim();
-    final resolvedTriage = triageText.isNotEmpty ? triageText : 'No triage level';
+
+    final resolvedTriage =
+    triageText.isNotEmpty ? _formatTriageLevel(triageText) : 'No triage level';
+
     final triageKey = resolvedTriage.toLowerCase();
-    final bool isUrgent = triageKey == 'urgent';
+
+    Color tagColor;
+    Color tagTextColor;
+
+    switch (triageKey) {
+      case 'urgent':
+        tagColor = AppColors.redChip;
+        tagTextColor = AppColors.redText;
+        break;
+
+      case 'expedited':
+        tagColor = AppColors.yellowChip;
+        tagTextColor = AppColors.yellowText;
+        break;
+
+      case 'nonurgent':
+      default:
+        tagColor = AppColors.greenChip;
+        tagTextColor = AppColors.greenText;
+        break;
+    }
 
     return _ScanEntry(
       location: record.bodyPart,
       date: _formatTimestamp(record.timestamp),
       tag: resolvedTriage,
-      tagColor: isUrgent ? AppColors.orangeChip : AppColors.greenChip,
-      tagTextColor: isUrgent ? AppColors.orangeText : AppColors.greenText,
+      tagColor: tagColor,
+      tagTextColor: tagTextColor,
     );
+  }
+
+  static String _formatTriageLevel(String value) {
+    final cleaned = value.trim().toLowerCase();
+
+    if (cleaned.isEmpty) return 'No triage level';
+
+    return cleaned[0].toUpperCase() + cleaned.substring(1);
   }
 
   static String _formatTimestamp(DateTime timestamp) {
