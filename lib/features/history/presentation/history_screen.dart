@@ -22,17 +22,55 @@ class _ScanEntry {
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
     final triageText = record.triageLevel.trim();
-    final resolvedTriage = triageText.isNotEmpty ? triageText : 'No triage level';
+
+    final resolvedTriage =
+    triageText.isNotEmpty ? _formatTriageLevel(triageText) : 'No triage level';
+
     final triageKey = resolvedTriage.toLowerCase();
-    final bool isUrgent = triageKey == 'urgent';
+
+    Color tagColor;
+    Color tagTextColor;
+
+    switch (triageKey) {
+      case 'urgent':
+        tagColor = AppColors.orangeChip; // red styling in your theme
+        tagTextColor = AppColors.orangeText;
+        break;
+
+      case 'expedited':
+        tagColor = AppColors.yellowChip;
+        tagTextColor = AppColors.yellowText;
+        break;
+
+      case 'nonurgent':
+      default:
+        tagColor = AppColors.greenChip;
+        tagTextColor = AppColors.greenText;
+        break;
+    }
 
     return _ScanEntry(
       location: record.bodyPart,
       dateTime: _formatTimestamp(record.timestamp),
       tag: resolvedTriage,
-      tagColor: isUrgent ? AppColors.orangeChip : AppColors.greenChip,
-      tagTextColor: isUrgent ? AppColors.orangeText : AppColors.greenText,
+      tagColor: tagColor,
+      tagTextColor: tagTextColor,
     );
+  }
+
+  static String _formatTriageLevel(String value) {
+    final lower = value.trim().toLowerCase();
+
+    switch (lower) {
+      case 'urgent':
+        return 'Urgent';
+      case 'expedited':
+        return 'Expedited';
+      case 'nonurgent':
+        return 'Nonurgent';
+      default:
+        return value;
+    }
   }
 
   static String _formatTimestamp(DateTime timestamp) {
