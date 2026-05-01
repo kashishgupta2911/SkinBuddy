@@ -59,18 +59,11 @@ class _ScanEntry {
   }
 
   static String _formatTriageLevel(String value) {
-    final lower = value.trim().toLowerCase();
+    final cleaned = value.trim().toLowerCase();
 
-    switch (lower) {
-      case 'urgent':
-        return 'Urgent';
-      case 'expedited':
-        return 'Expedited';
-      case 'nonurgent':
-        return 'Nonurgent';
-      default:
-        return value;
-    }
+    if (cleaned.isEmpty) return 'No triage level';
+
+    return cleaned[0].toUpperCase() + cleaned.substring(1);
   }
 
   static String _formatTimestamp(DateTime timestamp) {
