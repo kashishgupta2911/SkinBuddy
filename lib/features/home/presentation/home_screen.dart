@@ -23,17 +23,15 @@ class _ScanEntry {
   final Color tagTextColor;
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
-    final urgencyText = record.urgency.trim();
     final triageText = record.triageLevel.trim();
-    final isUrgent = urgencyText.toLowerCase().contains('urgent') &&
-        urgencyText.toLowerCase() != 'low urgency';
+    final resolvedTriage = triageText.isNotEmpty ? triageText : 'No triage level';
+    final triageKey = resolvedTriage.toLowerCase();
+    final bool isUrgent = triageKey == 'urgent';
 
     return _ScanEntry(
       location: record.bodyPart,
       date: _formatTimestamp(record.timestamp),
-      tag: urgencyText.isNotEmpty
-          ? urgencyText
-          : (triageText.isNotEmpty ? triageText : 'No triage level'),
+      tag: resolvedTriage,
       tagColor: isUrgent ? AppColors.orangeChip : AppColors.greenChip,
       tagTextColor: isUrgent ? AppColors.orangeText : AppColors.greenText,
     );
