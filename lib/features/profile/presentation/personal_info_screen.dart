@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../../core/services/profile_store.dart';
 import '../../../core/theme/app_theme.dart';
 
 const List<String> _ageRanges = [
@@ -24,8 +23,6 @@ class PersonalInfoScreen extends StatefulWidget {
 }
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
-  final _store = ProfileStore.instance;
-
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
@@ -40,15 +37,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     super.initState();
 
     _firstNameController = TextEditingController(
-      text: _store.firstName,
+      text: '',
     );
 
     _lastNameController = TextEditingController(
-      text: _store.lastName,
+      text: '',
     );
 
     _emailController = TextEditingController(
-      text: _store.email,
+      text: '',
     );
 
     _loadUserProfile();
@@ -142,9 +139,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
     setState(() => _isSaving = true);
 
-    _store.firstName = firstName;
-    _store.lastName = lastName;
-    _store.email = email;
+    // Save is handled by writing directly to Firestore (no local store)
 
     try {
       await FirebaseFirestore.instance.collection('users').doc(uid).set({

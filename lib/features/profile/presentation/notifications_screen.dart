@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/services/profile_store.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_theme.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -11,7 +11,6 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  final _store = ProfileStore.instance;
   late bool _scanReminders;
   late bool _resultsReady;
   late bool _weeklyTips;
@@ -20,11 +19,58 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    _scanReminders = _store.scanReminders;
-    _resultsReady = _store.resultsReady;
-    _weeklyTips = _store.weeklyTips;
-    _productUpdates = _store.productUpdates;
+    // default values kept in sync with previous ProfileStore defaults
+    _scanReminders = true;
+    _resultsReady = true;
+    _weeklyTips = false;
+    _productUpdates = false;
+    _loadNotificationSettings();
   }
+
+  Future<void> _loadNotificationSettings() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final data = snapshot.data();
+      if (!mounted || data == null) return;
+
+      setState(() {
+        _scanReminders = (data['scan_reminders'] as bool?) ?? true;
+        _resultsReady = (data['results_ready'] as bool?) ?? true;
+        _weeklyTips = (data['weekly_tips'] as bool?) ?? false;
+        _productUpdates = (data['product_updates'] as bool?) ?? false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to load notification settings right now.')),
+      );
+    }
+  }
+
+  Future<void> _saveSetting(String field, bool value) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in again to save changes.')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({field: value}, SetOptions(merge: true));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to save notification settings right now.')),
+      );
+    }
+  }
+
+  // initState moved above where the loader is declared
 
   @override
   Widget build(BuildContext context) {
@@ -54,14 +100,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     title: 'Scan Reminders',
                     subtitle: 'Monthly check-in reminders',
                     value: _scanReminders,
-                    onChanged: (v) => setState(() => _scanReminders = _store.scanReminders = v),
+                    onChanged: (v) {
+                      setState(() => _scanReminders = v);
+                      _saveSetting('scan_reminders', v);
+                    },
                   ),
                   const Divider(color: AppColors.iconBg, height: 1, indent: 16, endIndent: 16),
                   _ToggleRow(
                     title: 'Results Ready',
                     subtitle: 'When your analysis is complete',
                     value: _resultsReady,
-                    onChanged: (v) => setState(() => _resultsReady = _store.resultsReady = v),
+                    onChanged: (v) {
+                      setState(() => _resultsReady = v);
+                      _saveSetting('results_ready', v);
+                    },
                   ),
                 ],
               ),
@@ -74,14 +126,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     title: 'Weekly Tips',
                     subtitle: 'Skincare advice and articles',
                     value: _weeklyTips,
-                    onChanged: (v) => setState(() => _weeklyTips = _store.weeklyTips = v),
+                    onChanged: (v) {
+                      setState(() => _weeklyTips = v);
+                      _saveSetting('weekly_tips', v);
+                    },
                   ),
                   const Divider(color: AppColors.iconBg, height: 1, indent: 16, endIndent: 16),
                   _ToggleRow(
                     title: 'Product Updates',
                     subtitle: 'New features and improvements',
                     value: _productUpdates,
-                    onChanged: (v) => setState(() => _productUpdates = _store.productUpdates = v),
+                    onChanged: (v) {
+                      setState(() => _productUpdates = v);
+                      _saveSetting('product_updates', v);
+                    },
                   ),
                 ],
               ),
