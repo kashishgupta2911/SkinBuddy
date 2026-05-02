@@ -15,10 +15,14 @@ class ReportScreen extends StatelessWidget {
   final String imagePath;
   final TriageRecord record;
 
-  String get _urgencyTag =>
-      record.triageLevel.isNotEmpty
-          ? record.triageLevel
-          : 'No triage level';
+  String get _urgencyTag {
+    final value = record.triageLevel.trim().toLowerCase();
+
+    if (value.isEmpty) return 'No triage level';
+
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
   Color get _tagBg {
     switch (record.triageLevel.toLowerCase()) {
       case 'urgent':
@@ -30,6 +34,7 @@ class ReportScreen extends StatelessWidget {
         return AppColors.greenChip;
     }
   }
+
   Color get _tagText {
     switch (record.triageLevel.toLowerCase()) {
       case 'urgent':
@@ -41,6 +46,7 @@ class ReportScreen extends StatelessWidget {
         return AppColors.greenText;
     }
   }
+
   String get _urgencySubtext {
     switch (record.triageLevel.toLowerCase()) {
       case 'urgent':
