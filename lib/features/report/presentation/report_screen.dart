@@ -23,7 +23,7 @@ class ReportScreen extends StatelessWidget {
     switch (record.triageLevel.toLowerCase()) {
       case 'urgent':
         return AppColors.redChip;
-      case 'expedited':
+      case 'expedite':
         return AppColors.yellowChip;
       case 'nonurgent':
       default:
@@ -34,7 +34,7 @@ class ReportScreen extends StatelessWidget {
     switch (record.triageLevel.toLowerCase()) {
       case 'urgent':
         return AppColors.redText;
-      case 'expedited':
+      case 'expedite':
         return AppColors.yellowText;
       case 'nonurgent':
       default:
@@ -45,7 +45,7 @@ class ReportScreen extends StatelessWidget {
     switch (record.triageLevel.toLowerCase()) {
       case 'urgent':
         return 'Consult a professional';
-      case 'expedited':
+      case 'expedite':
         return 'Monitor closely and consider medical advice';
       case 'nonurgent':
       default:

@@ -1,7 +1,7 @@
 import '../../../core/services/inference_service.dart';
 import '../../../core/constants/triage_config.dart';
 
-enum TriageOutcome { urgent, nonurgent, expedited }
+enum TriageOutcome { urgent, nonurgent, expedite }
 
 class TriageDecision {
   const TriageDecision({

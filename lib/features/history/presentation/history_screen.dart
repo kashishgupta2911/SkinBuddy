@@ -41,7 +41,7 @@ class _ScanEntry {
         tagTextColor = AppColors.redText;
         break;
 
-      case 'expedited':
+      case 'expedite':
         tagColor = AppColors.yellowChip;
         tagTextColor = AppColors.yellowText;
         break;
