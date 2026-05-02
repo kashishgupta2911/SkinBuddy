@@ -288,8 +288,7 @@ class _ContextScreenState extends State<ContextScreen> {
             child: Image.file(
               File(widget.imagePath),
               width: double.infinity,
-              height: 180,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
             ),
           ),
           const Padding(
