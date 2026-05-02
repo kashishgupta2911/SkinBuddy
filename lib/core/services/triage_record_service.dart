@@ -22,7 +22,7 @@ class TriageRecordService {
 
   Future<void> saveRecord({
     required PredictionResult prediction,
-    required TriageDecision decision,
+    required String triageLevel,
     required String imagePath,
 
     required String relatedCategory,
@@ -93,7 +93,7 @@ class TriageRecordService {
       'duration': duration,
 
       // Model outputs
-      'triage_level': decision.outcome.name,
+      'triage_level': triageLevel,
 
       'predicted_groups': [
         {
@@ -101,9 +101,6 @@ class TriageRecordService {
           'confidence': prediction.confidence,
         }
       ],
-
-      'explanation': decision.reason,
-      'next_steps': nextSteps,
     });
   }
 
