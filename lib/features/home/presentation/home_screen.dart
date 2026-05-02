@@ -302,15 +302,18 @@ class HomeScreen extends StatelessWidget {
         .collection('users')
         .doc(uid)
         .collection('triage_records')
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          final records = snapshot.docs
-              .map(TriageRecord.fromFirestore)
-              .toList(growable: false);
-          records.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-          return records;
-        });
+      final records = snapshot.docs
+          .map(TriageRecord.fromFirestore)
+          .toList(growable: false);
+
+      records.sort(
+            (a, b) => b.timestamp.compareTo(a.timestamp),
+      );
+
+      return records;
+    });
   }
 
   Widget _buildScanCard({

@@ -93,8 +93,10 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         duration:
         widget.contextData['duration'] ?? '',
 
-        nextSteps: '',
+        nextSteps: 'Pending next steps until model integration.',
       );
+
+      final record = await _triageRecordService.getLatestRecord();
 
       if (!mounted) return;
 
@@ -102,6 +104,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         MaterialPageRoute(
           builder: (_) => ReportScreen(
             imagePath: widget.imagePath,
+            record: record,
           ),
         ),
       );

@@ -3,40 +3,55 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../history/domain/triage_record.dart';
 
 class ReportScreen extends StatelessWidget {
   const ReportScreen({
     super.key,
     required this.imagePath,
-    this.label = 'Common skin variation',
-    this.confidence = 0.85,
-    this.isUrgent = false,
+    required this.record,
   });
 
   final String imagePath;
-  final String label;
-  final double confidence;
-  final bool isUrgent;
+  final TriageRecord record;
 
-  String get _urgencyTag => isUrgent ? 'Urgent' : 'Low urgency';
-  Color get _tagBg => isUrgent ? AppColors.redChip : AppColors.greenChip;
-  Color get _tagText => isUrgent ? AppColors.redText : AppColors.greenText;
-  String get _urgencySubtext =>
-      isUrgent ? 'Consult a professional' : 'Self-care recommended';
-
-  String get _detectionText =>
-      "Based on the analysis of your photo, we've identified what appears to "
-      "be a common skin variation that typically doesn't require immediate "
-      "medical attention. The affected area shows characteristics consistent "
-      "with normal skin changes that may be related to environmental factors "
-      "or natural variations.";
-
-  static const _recommendations = [
-    'Continue your regular skincare routine with gentle, fragrance-free products',
-    'Monitor the area for any changes in size, color, or texture',
-    'Use daily sun protection (SPF 30 or higher) to prevent further changes',
-    'If you notice any changes, take another scan to track progress',
-  ];
+  String get _urgencyTag =>
+      record.triageLevel.isNotEmpty
+          ? record.triageLevel
+          : 'No triage level';
+  Color get _tagBg {
+    switch (record.triageLevel.toLowerCase()) {
+      case 'urgent':
+        return AppColors.redChip;
+      case 'expedited':
+        return AppColors.yellowChip;
+      case 'nonurgent':
+      default:
+        return AppColors.greenChip;
+    }
+  }
+  Color get _tagText {
+    switch (record.triageLevel.toLowerCase()) {
+      case 'urgent':
+        return AppColors.redText;
+      case 'expedited':
+        return AppColors.yellowText;
+      case 'nonurgent':
+      default:
+        return AppColors.greenText;
+    }
+  }
+  String get _urgencySubtext {
+    switch (record.triageLevel.toLowerCase()) {
+      case 'urgent':
+        return 'Consult a professional';
+      case 'expedited':
+        return 'Monitor closely and consider medical advice';
+      case 'nonurgent':
+      default:
+        return 'Self-care recommended';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +203,7 @@ class ReportScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            _detectionText,
+            record.explanation,
             style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
@@ -207,7 +222,9 @@ class ReportScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.iconBg.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: AppColors.iconBg.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,36 +238,17 @@ class ReportScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          ...List.generate(_recommendations.length, (i) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 6),
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      _recommendations[i],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+
+          Text(
+            record.nextSteps.isNotEmpty
+                ? record.nextSteps
+                : 'No recommendations available.',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
         ],
       ),
     );

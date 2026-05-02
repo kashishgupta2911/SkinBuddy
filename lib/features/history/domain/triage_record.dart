@@ -4,20 +4,22 @@ class TriageRecord {
   const TriageRecord({
     required this.id,
     required this.bodyPart,
-    required this.notes,
-    required this.predictedGroup,
-    required this.timestamp,
     required this.triageLevel,
+    required this.predictedGroup,
+    required this.explanation,
+    required this.nextSteps,
     required this.imgUrl,
+    required this.timestamp,
   });
 
   final String id;
   final String bodyPart;
-  final String notes;
   final String predictedGroup;
   final DateTime timestamp;
   final String triageLevel;
   final String imgUrl;
+  final String explanation;
+  final String nextSteps;
 
   factory TriageRecord.fromFirestore(
       QueryDocumentSnapshot<Map<String, dynamic>> doc,
@@ -25,6 +27,7 @@ class TriageRecord {
     final data = doc.data();
     final timestamp = data['timestamp'];
     final legacyCreatedAt = data['createdAt'];
+    final explanation = (data['explanation'] as String? ?? '').trim();
 
     return TriageRecord(
       id: doc.id,
@@ -36,11 +39,6 @@ class TriageRecord {
           : ((data['label'] as String?)?.trim().isNotEmpty == true
           ? (data['label'] as String).trim()
           : 'Unknown area'),
-
-      notes: ((data['notes'] as String?) ??
-          (data['triageReason'] as String?) ??
-          '')
-          .trim(),
 
       predictedGroup: _getHighestConfidenceGroup(data),
 
@@ -56,6 +54,14 @@ class TriageRecord {
           .trim(),
 
       imgUrl: (data['img_url'] as String? ?? '').trim(),
+
+      explanation: explanation.isNotEmpty
+          ? explanation
+          : 'No explanation available.',
+
+      nextSteps: (data['next_steps'] as String?)?.trim().isNotEmpty == true
+          ? (data['next_steps'] as String).trim()
+          : 'No recommendations available.',
     );
   }
 
@@ -63,27 +69,27 @@ class TriageRecord {
     final groups = data['predicted_groups'];
 
     if (groups is List && groups.isNotEmpty) {
-      Map<String, dynamic>? bestGroup;
+      String bestName = 'Awaiting prediction';
       double highestConfidence = -1;
 
       for (final item in groups) {
-        if (item is Map<String, dynamic>) {
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+
           final confidence =
-              (item['confidence'] as num?)?.toDouble() ?? 0;
+              (map['confidence'] as num?)?.toDouble() ?? 0;
 
           final name =
-              (item['name'] as String?)?.trim() ?? '';
+              (map['name'] as String?)?.trim() ?? '';
 
           if (name.isNotEmpty && confidence > highestConfidence) {
             highestConfidence = confidence;
-            bestGroup = item;
+            bestName = name;
           }
         }
       }
 
-      if (bestGroup != null) {
-        return (bestGroup['name'] as String).trim();
-      }
+      return bestName;
     }
 
     return 'Awaiting prediction';

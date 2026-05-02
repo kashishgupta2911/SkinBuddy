@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../features/result/domain/triage_logic.dart';
 import 'inference_service.dart';
-
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../../features/history/domain/triage_record.dart';
 
 class TriageRecordService {
   TriageRecordService({
@@ -79,6 +79,7 @@ class TriageRecordService {
     await docRef.set({
       'img_url': imageUrl,
       'timestamp': FieldValue.serverTimestamp(),
+      'createdAt': Timestamp.now(),
 
       // User metadata
       'age_range': ageRange,
@@ -104,5 +105,27 @@ class TriageRecordService {
       'explanation': decision.reason,
       'next_steps': nextSteps,
     });
+  }
+
+  Future<TriageRecord> getLatestRecord() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw StateError('User not authenticated.');
+    }
+
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('triage_records')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      throw StateError('No triage records found.');
+    }
+
+    return TriageRecord.fromFirestore(snapshot.docs.first);
   }
 }

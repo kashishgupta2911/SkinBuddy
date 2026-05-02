@@ -143,6 +143,8 @@ class HistoryScreen extends StatelessWidget {
       stream: _historyStream(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
+          print(snapshot.error);
+
           return _buildMessageCard(
             icon: Icons.error_outline,
             title: 'Unable to load history',
@@ -192,7 +194,6 @@ class HistoryScreen extends StatelessWidget {
         .collection('users')
         .doc(uid)
         .collection('triage_records')
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
           final records = snapshot.docs
