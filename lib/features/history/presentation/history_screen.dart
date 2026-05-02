@@ -143,8 +143,7 @@ class HistoryScreen extends StatelessWidget {
       stream: _historyStream(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          print(snapshot.error);
-
+          debugPrint('${snapshot.error}');
           return _buildMessageCard(
             icon: Icons.error_outline,
             title: 'Unable to load history',

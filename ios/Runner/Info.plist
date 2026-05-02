@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>SkinBuddy needs camera access to capture photos of skin concerns for triage guidance.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SkinBuddy needs photo library access so you can choose an existing image for analysis.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

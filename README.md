@@ -41,12 +41,37 @@ flowchart TD
 - Add the configuration file as `lib/firebase_options.dart`
 - Records are stored using the following structure `users/{uid}/triage_records/{recordId}`
 
-Ex.
+Structure
 ```
 users
-   └── test_uid
+   └── uid
        └── triage_records
-           └── record_1
+           └── recordId
+```
+
+Attribute Details
+```
+users
+ └── uid
+      ├── first_name
+      ├── last_name
+      ├── email
+      ├── age_range
+      └── triage_records
+           └── record_id
+                ├── img_url
+                ├── timestamp
+                ├── related_category
+                ├── texture
+                ├── body_area
+                ├── condition_symptoms
+                ├── other_symptoms
+                ├── duration
+                ├── age_range
+                ├── triage_level
+                ├── predicted_groups
+                ├── explanation
+                └── next_steps
 ```
 
 Each triage record includes:
