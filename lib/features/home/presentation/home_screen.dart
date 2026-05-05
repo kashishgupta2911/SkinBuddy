@@ -14,6 +14,7 @@ class _ScanEntry {
     required this.tag,
     required this.tagColor,
     required this.tagTextColor,
+    required this.imageUrl,
   });
 
   final String location;
@@ -21,22 +22,53 @@ class _ScanEntry {
   final String tag;
   final Color tagColor;
   final Color tagTextColor;
+  final String imageUrl;
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
-    final urgencyText = record.urgency.trim();
     final triageText = record.triageLevel.trim();
-    final isUrgent = urgencyText.toLowerCase().contains('urgent') &&
-        urgencyText.toLowerCase() != 'low urgency';
+
+    final resolvedTriage =
+    triageText.isNotEmpty ? _formatTriageLevel(triageText) : 'No triage level';
+
+    final triageKey = resolvedTriage.toLowerCase();
+
+    Color tagColor;
+    Color tagTextColor;
+
+    switch (triageKey) {
+      case 'urgent':
+        tagColor = AppColors.redChip;
+        tagTextColor = AppColors.redText;
+        break;
+
+      case 'expedite':
+        tagColor = AppColors.yellowChip;
+        tagTextColor = AppColors.yellowText;
+        break;
+
+      case 'nonurgent':
+      default:
+        tagColor = AppColors.greenChip;
+        tagTextColor = AppColors.greenText;
+        break;
+    }
 
     return _ScanEntry(
       location: record.bodyPart,
       date: _formatTimestamp(record.timestamp),
-      tag: urgencyText.isNotEmpty
-          ? urgencyText
-          : (triageText.isNotEmpty ? triageText : 'No triage level'),
-      tagColor: isUrgent ? AppColors.orangeChip : AppColors.greenChip,
-      tagTextColor: isUrgent ? AppColors.orangeText : AppColors.greenText,
+      tag: resolvedTriage,
+      tagColor: tagColor,
+      tagTextColor: tagTextColor,
+      imageUrl: record.imgUrl,
     );
+  }
+
+  static String _formatTriageLevel(String value) {
+    final cleaned = value.trim().toLowerCase();
+
+    if (cleaned.isEmpty) return 'No triage level';
+
+    return cleaned[0].toUpperCase() + cleaned.substring(1);
   }
 
   static String _formatTimestamp(DateTime timestamp) {
@@ -249,6 +281,7 @@ class HomeScreen extends StatelessWidget {
                     tag: entry.tag,
                     tagColor: entry.tagColor,
                     tagTextColor: entry.tagTextColor,
+                    imageUrl: entry.imageUrl,
                   ),
                 );
               }),
@@ -269,15 +302,18 @@ class HomeScreen extends StatelessWidget {
         .collection('users')
         .doc(uid)
         .collection('triage_records')
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          final records = snapshot.docs
-              .map(TriageRecord.fromFirestore)
-              .toList(growable: false);
-          records.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-          return records;
-        });
+      final records = snapshot.docs
+          .map(TriageRecord.fromFirestore)
+          .toList(growable: false);
+
+      records.sort(
+            (a, b) => b.timestamp.compareTo(a.timestamp),
+      );
+
+      return records;
+    });
   }
 
   Widget _buildScanCard({
@@ -286,6 +322,7 @@ class HomeScreen extends StatelessWidget {
     required String tag,
     required Color tagColor,
     required Color tagTextColor,
+    required String imageUrl,
   }) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -296,12 +333,28 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+              imageUrl,
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 48,
+                  height: 48,
+                  color: AppColors.iconBg,
+                  child: const Icon(Icons.image_not_supported),
+                );
+              },
+            )
+                : Container(
+              width: 48,
+              height: 48,
               color: AppColors.iconBg,
-              borderRadius: BorderRadius.circular(12),
+              child: const Icon(Icons.image),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -311,6 +364,8 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Text(
                   location,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

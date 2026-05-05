@@ -35,7 +35,7 @@ class ResultScreen extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.file(File(imagePath), fit: BoxFit.cover),
+              child: Image.file(File(imagePath), fit: BoxFit.contain),
             ),
             const SizedBox(height: 16),
             Text('Predicted class: $label', style: Theme.of(context).textTheme.titleMedium),

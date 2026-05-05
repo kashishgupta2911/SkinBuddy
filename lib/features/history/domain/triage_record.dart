@@ -4,60 +4,94 @@ class TriageRecord {
   const TriageRecord({
     required this.id,
     required this.bodyPart,
-    required this.notes,
-    required this.predictedGroup,
-    required this.timestamp,
     required this.triageLevel,
-    required this.urgency,
+    required this.predictedGroup,
+    required this.explanation,
+    required this.nextSteps,
+    required this.imgUrl,
+    required this.timestamp,
   });
 
   final String id;
   final String bodyPart;
-  final String notes;
   final String predictedGroup;
   final DateTime timestamp;
   final String triageLevel;
-  final String urgency;
+  final String imgUrl;
+  final String explanation;
+  final String nextSteps;
 
   factory TriageRecord.fromFirestore(
-    QueryDocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
+      QueryDocumentSnapshot<Map<String, dynamic>> doc,
+      ) {
     final data = doc.data();
     final timestamp = data['timestamp'];
     final legacyCreatedAt = data['createdAt'];
+    final explanation = (data['explanation'] as String? ?? '').trim();
 
     return TriageRecord(
       id: doc.id,
-      bodyPart: (data['body_part'] as String?)?.trim().isNotEmpty == true
-          ? (data['body_part'] as String).trim()
+
+      bodyPart: (data['body_area'] as List?)?.isNotEmpty == true
+          ? (data['body_area'] as List)
+          .map((e) => e.toString())
+          .join(', ')
           : ((data['label'] as String?)?.trim().isNotEmpty == true
-                ? (data['label'] as String).trim()
-                : 'Unknown area'),
-      notes: ((data['notes'] as String?) ?? (data['triageReason'] as String?) ?? '')
-          .trim(),
-      predictedGroup:
-          ((data['predicted_group'] as String?) ?? (data['label'] as String?) ?? '')
-              .trim(),
+          ? (data['label'] as String).trim()
+          : 'Unknown area'),
+
+      predictedGroup: _getHighestConfidenceGroup(data),
+
       timestamp: timestamp is Timestamp
           ? timestamp.toDate()
           : legacyCreatedAt is Timestamp
-              ? legacyCreatedAt.toDate()
-              : DateTime.fromMillisecondsSinceEpoch(0),
-      triageLevel:
-          ((data['triage_level'] as String?) ?? (data['triageOutcome'] as String?) ?? '')
-              .trim(),
-      urgency: ((data['urgency'] as String?) ?? _legacyUrgency(data)).trim(),
+          ? legacyCreatedAt.toDate()
+          : DateTime.fromMillisecondsSinceEpoch(0),
+
+      triageLevel: ((data['triage_level'] as String?) ??
+          (data['triageOutcome'] as String?) ??
+          '')
+          .trim(),
+
+      imgUrl: (data['img_url'] as String? ?? '').trim(),
+
+      explanation: explanation.isNotEmpty
+          ? explanation
+          : 'No explanation available.',
+
+      nextSteps: (data['next_steps'] as String?)?.trim().isNotEmpty == true
+          ? (data['next_steps'] as String).trim()
+          : 'No recommendations available.',
     );
   }
 
-  static String _legacyUrgency(Map<String, dynamic> data) {
-    final triageOutcome = (data['triageOutcome'] as String?)?.trim().toLowerCase();
-    if (triageOutcome == 'urgent') {
-      return 'Urgent';
+  static String _getHighestConfidenceGroup(Map<String, dynamic> data) {
+    final groups = data['predicted_groups'];
+
+    if (groups is List && groups.isNotEmpty) {
+      String bestName = 'Awaiting prediction';
+      double highestConfidence = -1;
+
+      for (final item in groups) {
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+
+          final confidence =
+              (map['confidence'] as num?)?.toDouble() ?? 0;
+
+          final name =
+              (map['name'] as String?)?.trim() ?? '';
+
+          if (name.isNotEmpty && confidence > highestConfidence) {
+            highestConfidence = confidence;
+            bestName = name;
+          }
+        }
+      }
+
+      return bestName;
     }
-    if (triageOutcome == 'nonUrgent'.toLowerCase()) {
-      return 'Low urgency';
-    }
-    return '';
+
+    return 'Awaiting prediction';
   }
 }

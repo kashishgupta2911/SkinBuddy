@@ -1,7 +1,7 @@
 import '../../../core/services/inference_service.dart';
 import '../../../core/constants/triage_config.dart';
 
-enum TriageOutcome { urgent, nonUrgent }
+enum TriageOutcome { urgent, nonurgent, expedite }
 
 class TriageDecision {
   const TriageDecision({
@@ -35,7 +35,7 @@ class TriageLogic {
     }
 
     return TriageDecision(
-      outcome: TriageOutcome.nonUrgent,
+      outcome: TriageOutcome.nonurgent,
       reason: 'Pattern looks lower risk with sufficient confidence.',
       disclaimer: _disclaimer,
     );

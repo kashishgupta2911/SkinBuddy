@@ -199,30 +199,33 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
 
   Widget _buildGuideOverlay() {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 220,
-            height: 220,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.4),
-                width: 2,
+      child: Transform.translate(
+        offset: const Offset(0, 60), // move downward
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  width: 2,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Center your skin concern here',
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.white.withValues(alpha: 0.8),
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Center your skin concern here',
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.white.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -12,6 +12,8 @@ class _ScanEntry {
     required this.tag,
     required this.tagColor,
     required this.tagTextColor,
+    required this.predictedGroup,
+    required this.imageUrl,
   });
 
   final String location;
@@ -19,22 +21,55 @@ class _ScanEntry {
   final String tag;
   final Color tagColor;
   final Color tagTextColor;
+  final String predictedGroup;
+  final String imageUrl;
 
   factory _ScanEntry.fromRecord(TriageRecord record) {
-    final urgencyText = record.urgency.trim();
     final triageText = record.triageLevel.trim();
-    final isUrgent = urgencyText.toLowerCase().contains('urgent') &&
-        urgencyText.toLowerCase() != 'low urgency';
+
+    final resolvedTriage =
+    triageText.isNotEmpty ? _formatTriageLevel(triageText) : 'No triage level';
+
+    final triageKey = resolvedTriage.toLowerCase();
+
+    Color tagColor;
+    Color tagTextColor;
+
+    switch (triageKey) {
+      case 'urgent':
+        tagColor = AppColors.redChip;
+        tagTextColor = AppColors.redText;
+        break;
+
+      case 'expedite':
+        tagColor = AppColors.yellowChip;
+        tagTextColor = AppColors.yellowText;
+        break;
+
+      case 'nonurgent':
+      default:
+        tagColor = AppColors.greenChip;
+        tagTextColor = AppColors.greenText;
+        break;
+    }
 
     return _ScanEntry(
       location: record.bodyPart,
       dateTime: _formatTimestamp(record.timestamp),
-      tag: urgencyText.isNotEmpty
-          ? urgencyText
-          : (triageText.isNotEmpty ? triageText : 'No triage level'),
-      tagColor: isUrgent ? AppColors.orangeChip : AppColors.greenChip,
-      tagTextColor: isUrgent ? AppColors.orangeText : AppColors.greenText,
+      tag: resolvedTriage,
+      tagColor: tagColor,
+      tagTextColor: tagTextColor,
+      predictedGroup: record.predictedGroup,
+      imageUrl: record.imgUrl,
     );
+  }
+
+  static String _formatTriageLevel(String value) {
+    final cleaned = value.trim().toLowerCase();
+
+    if (cleaned.isEmpty) return 'No triage level';
+
+    return cleaned[0].toUpperCase() + cleaned.substring(1);
   }
 
   static String _formatTimestamp(DateTime timestamp) {
@@ -158,7 +193,6 @@ class HistoryScreen extends StatelessWidget {
         .collection('users')
         .doc(uid)
         .collection('triage_records')
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
           final records = snapshot.docs
@@ -316,12 +350,39 @@ class _TimelineItem extends StatelessWidget {
       ),
       child: Row(
         children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: entry.imageUrl.isNotEmpty
+                ? Image.network(
+              entry.imageUrl,
+              width: 64,
+              height: 96,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 64,
+                  height: 96,
+                  color: AppColors.iconBg,
+                  child: const Icon(Icons.image_not_supported),
+                );
+              },
+            )
+                : Container(
+              width: 64,
+              height: 96,
+              color: AppColors.iconBg,
+              child: const Icon(Icons.image),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   entry.location,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -331,6 +392,14 @@ class _TimelineItem extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   entry.dateTime,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Likely: ${entry.predictedGroup}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,

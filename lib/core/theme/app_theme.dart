@@ -12,14 +12,16 @@ abstract final class AppColors {
   static const Color cameraBg = Color(0xFF8B6C4F);
   static const Color greenChip = Color(0xFFE0EDDA);
   static const Color greenText = Color(0xFF4A7A3A);
-  static const Color orangeChip = Color(0xFFFDE8D0);
-  static const Color orangeText = Color(0xFFB8703A);
+  static const Color yellowChip = Color(0xFFFFF4CC);
+  static const Color yellowText = Color(0xFFB8860B);
+  static const Color redChip = Color(0xFFFDD0D0);
+  static const Color redText = Color(0xFFB83A3A);
   static const Color disclaimerBg = Color(0xFFFFF0DB);
   static const Color textPrimary = Color(0xFF3A3027);
   static const Color textSecondary = Color(0xFF7A6B5A);
   static const Color iconBg = Color(0xFFE8DDD0);
   static const Color navUnselected = Color(0xFFB0A090);
-  static const Color tipCardBg = Color(0xFFF0E8DA);
+  static const Color tipCardBg = Color(0xFFFFFBF8);
 }
 
 abstract final class AppSpacing {

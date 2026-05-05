@@ -6,6 +6,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../error/presentation/error_screen.dart';
 import '../../report/presentation/report_screen.dart';
 
+import '../../../core/services/triage_record_service.dart';
+import '../../../core/services/inference_service.dart';
+
 class AnalyzingScreen extends StatefulWidget {
   const AnalyzingScreen({
     super.key,
@@ -25,13 +28,17 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   late final AnimationController _rotationController;
   late final AnimationController _pulseController;
 
+  final _triageRecordService = TriageRecordService();
+
   @override
   void initState() {
     super.initState();
+
     _rotationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -41,27 +48,75 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   }
 
   Future<void> _startAnalysis() async {
-    // Simulate analysis delay — will wire to real inference later
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
+    try {
+      await Future.delayed(const Duration(seconds: 2));
 
-    // When inference is wired, use real result to decide success/error
-    _navigateToReport();
+      // temporary placeholder until model is connected
+      const placeholderPredictionLabel = 'Awaiting model prediction';
+      const placeholderConfidence = 0.0;
+
+      // THIS is the important part:
+      // triage_level is just a string
+      const placeholderTriageLevel = 'nonurgent';
+
+      await _triageRecordService.saveRecord(
+        prediction: PredictionResult(
+          label: placeholderPredictionLabel,
+          confidence: placeholderConfidence,
+        ),
+
+        imagePath: widget.imagePath,
+
+        triageLevel: placeholderTriageLevel,
+
+        relatedCategory:
+        widget.contextData['related_category'] ?? '',
+
+        texture:
+        widget.contextData['texture'] ?? '',
+
+        bodyArea: List<String>.from(
+          widget.contextData['body_area'] ?? [],
+        ),
+
+        conditionSymptoms: List<String>.from(
+          widget.contextData['condition_symptoms'] ?? [],
+        ),
+
+        otherSymptoms: List<String>.from(
+          widget.contextData['other_symptoms'] ?? [],
+        ),
+
+        duration:
+        widget.contextData['duration'] ?? '',
+
+        nextSteps: 'Pending next steps until model integration.',
+      );
+
+      final record = await _triageRecordService.getLatestRecord();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ReportScreen(
+            imagePath: widget.imagePath,
+            record: record,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _navigateToError();
+    }
   }
 
-  void _navigateToReport() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ReportScreen(imagePath: widget.imagePath),
-      ),
-    );
-  }
-
-  // ignore: unused_element
   void _navigateToError() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => ErrorScreen(imagePath: widget.imagePath),
+        builder: (_) => ErrorScreen(
+          imagePath: widget.imagePath,
+        ),
       ),
     );
   }
@@ -82,15 +137,18 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
           children: [
             _buildAnimatedLogo(),
             const SizedBox(height: AppSpacing.xxl),
+
             const Text(
-              'Analyzing your photo',
+              'Analyzing your skin',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
+
             const SizedBox(height: AppSpacing.sm),
+
             AnimatedBuilder(
               animation: _pulseController,
               builder: (context, child) {
@@ -143,24 +201,29 @@ class _SwirlPainter extends CustomPainter {
       ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round;
 
-    // Three curved arcs forming a swirl pattern
     for (int i = 0; i < 3; i++) {
       final startAngle = (i * 2 * math.pi / 3) - math.pi / 2;
       const sweepAngle = math.pi * 0.6;
       final arcRadius = radius * 0.65;
 
       canvas.drawArc(
-        Rect.fromCircle(center: center, radius: arcRadius),
+        Rect.fromCircle(
+          center: center,
+          radius: arcRadius,
+        ),
         startAngle,
         sweepAngle,
         false,
         paint,
       );
 
-      // Smaller inner arcs
       final innerRadius = radius * 0.4;
+
       canvas.drawArc(
-        Rect.fromCircle(center: center, radius: innerRadius),
+        Rect.fromCircle(
+          center: center,
+          radius: innerRadius,
+        ),
         startAngle + math.pi / 6,
         sweepAngle * 0.7,
         false,
@@ -168,21 +231,30 @@ class _SwirlPainter extends CustomPainter {
       );
     }
 
-    // Dots around the outer edge
     final dotPaint = Paint()
       ..color = AppColors.primary
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 8; i++) {
       final angle = (i * 2 * math.pi / 8) - math.pi / 2;
+
       final dotCenter = Offset(
         center.dx + radius * 0.85 * math.cos(angle),
         center.dy + radius * 0.85 * math.sin(angle),
       );
-      canvas.drawCircle(dotCenter, 3.5, dotPaint);
+
+      canvas.drawCircle(
+        dotCenter,
+        3.5,
+        dotPaint,
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(
+      covariant CustomPainter oldDelegate,
+      ) {
+    return false;
+  }
 }

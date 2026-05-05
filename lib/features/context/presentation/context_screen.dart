@@ -165,7 +165,7 @@ class _ContextScreenState extends State<ContextScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.xs),
                     _buildPhotoPreview(),
 
                     if (_isUnder18) ...[
@@ -173,7 +173,7 @@ class _ContextScreenState extends State<ContextScreen> {
                       _buildUnder18Disclaimer(),
                     ],
 
-                    const SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.lg),
                     _buildSectionTitle('About the condition'),
                     const SizedBox(height: AppSpacing.lg),
                     _buildDropdownQuestion(
@@ -273,37 +273,42 @@ class _ContextScreenState extends State<ContextScreen> {
   }
 
   Widget _buildPhotoPreview() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: AppColors.iconBg,
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(16),
-            ),
-            child: Image.file(
-              File(widget.imagePath),
-              width: double.infinity,
-              height: 180,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(AppSpacing.sm),
-            child: Text(
-              'Your captured photo',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+    return Center(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: AppColors.iconBg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 400,
+                ),
+                child: Image.file(
+                  File(widget.imagePath),
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
-          ),
-        ],
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.sm),
+              child: Text(
+                'Your captured photo',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -313,16 +318,16 @@ class _ContextScreenState extends State<ContextScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.orangeChip,
+        color: AppColors.redChip,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.orangeText.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.redText.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
             Icons.warning_amber_rounded,
-            color: AppColors.orangeText,
+            color: AppColors.redText,
             size: 22,
           ),
           const SizedBox(width: AppSpacing.sm),
