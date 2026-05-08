@@ -45,7 +45,7 @@ flowchart TD
 - Connect to your device or emulator
 - Run `flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY`
 
-Structure
+## Structure
 ```
 users
    └── uid
