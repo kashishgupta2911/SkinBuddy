@@ -41,7 +41,7 @@ flowchart TD
 - Add the configuration file as `lib/firebase_options.dart`
 - Records are stored using the following structure `users/{uid}/triage_records/{recordId}`
 
-- ## Gemini API
+## Gemini API
 - Connect to your device or emulator
 - Run `flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY`
 
