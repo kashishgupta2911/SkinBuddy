@@ -2,12 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/services/gemini_triage_copy_service.dart';
+import '../../../core/services/inference_service.dart';
+import '../../../core/services/triage_record_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../error/presentation/error_screen.dart';
+import '../../report/domain/triage_report_view_data.dart';
 import '../../report/presentation/report_screen.dart';
-
-import '../../../core/services/triage_record_service.dart';
-import '../../../core/services/inference_service.dart';
+import '../../result/domain/triage_logic.dart';
 
 class AnalyzingScreen extends StatefulWidget {
   const AnalyzingScreen({
@@ -28,8 +30,6 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   late final AnimationController _rotationController;
   late final AnimationController _pulseController;
 
-  final _triageRecordService = TriageRecordService();
-
   @override
   void initState() {
     super.initState();
@@ -48,69 +48,122 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   }
 
   Future<void> _startAnalysis() async {
+    final inference = InferenceService();
+    final triageRecords = TriageRecordService();
+    final gemini = GeminiTriageCopyService();
+
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      var groups = await inference.predictGroups(widget.imagePath);
+      if (groups.isEmpty) {
+        groups = [const PredictedGroup(group: 'unknown', confidence: 0)];
+      }
+      final top = groups.first;
+      final prediction =
+          PredictionResult(label: top.group, confidence: top.confidence);
+      final decision = TriageLogic.evaluate(prediction);
 
-      // temporary placeholder until model is connected
-      const placeholderPredictionLabel = 'Awaiting model prediction';
-      const placeholderConfidence = 0.0;
+      final contextPayload = Map<String, dynamic>.from(widget.contextData);
 
-      // THIS is the important part:
-      // triage_level is just a string
-      const placeholderTriageLevel = 'nonurgent';
-
-      await _triageRecordService.saveRecord(
-        prediction: PredictionResult(
-          label: placeholderPredictionLabel,
-          confidence: placeholderConfidence,
-        ),
-
+      final docRef = await triageRecords.createReport(
+        predictedGroups: groups,
+        decision: decision,
+        contextData: contextPayload,
         imagePath: widget.imagePath,
-
-        triageLevel: placeholderTriageLevel,
-
-        relatedCategory:
-        widget.contextData['related_category'] ?? '',
-
-        texture:
-        widget.contextData['texture'] ?? '',
-
-        bodyArea: List<String>.from(
-          widget.contextData['body_area'] ?? [],
-        ),
-
-        conditionSymptoms: List<String>.from(
-          widget.contextData['condition_symptoms'] ?? [],
-        ),
-
-        otherSymptoms: List<String>.from(
-          widget.contextData['other_symptoms'] ?? [],
-        ),
-
-        duration:
-        widget.contextData['duration'] ?? '',
-
-        nextSteps: 'Pending next steps until model integration.',
+        modelVersion: 'mobilenetv2-skinbuddy-v1',
+        consentToStoreImagePath: false,
       );
 
-      final record = await _triageRecordService.getLatestRecord();
+      var explanation = '';
+      var nextSteps = <String>[];
+      String? geminiError;
+
+      if (gemini.isConfigured) {
+        try {
+          final copy = await gemini.generateExplanationAndNextSteps(
+            triagePayload: _buildGeminiPayload(
+              groups: groups,
+              decision: decision,
+              contextData: contextPayload,
+            ),
+          );
+          explanation = copy.explanation;
+          nextSteps = copy.nextSteps;
+          await triageRecords.updateReportCopy(
+            ref: docRef,
+            explanation: explanation,
+            nextSteps: nextSteps,
+          );
+        } catch (e) {
+          geminiError = e.toString();
+          await triageRecords.updateReportCopy(
+            ref: docRef,
+            explanation: '',
+            nextSteps: const [],
+            geminiError: geminiError,
+          );
+        }
+      } else {
+        geminiError = 'AI summary is unavailable (API key not configured).';
+        await triageRecords.updateReportCopy(
+          ref: docRef,
+          explanation: '',
+          nextSteps: const [],
+          geminiError: geminiError,
+        );
+      }
 
       if (!mounted) return;
-
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => ReportScreen(
-            imagePath: widget.imagePath,
-            record: record,
+            viewData: TriageReportViewData(
+              imagePath: widget.imagePath,
+              predictedGroups: groups,
+              isUrgent: decision.outcome == TriageOutcome.urgent,
+              contextData: contextPayload,
+              explanation: explanation,
+              nextSteps: nextSteps,
+              geminiError: geminiError,
+            ),
           ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      _navigateToError();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ErrorScreen(imagePath: widget.imagePath),
+        ),
+      );
     }
   }
 
+  Map<String, dynamic> _buildGeminiPayload({
+    required List<PredictedGroup> groups,
+    required TriageDecision decision,
+    required Map<String, dynamic> contextData,
+  }) {
+    return {
+      'predicted_groups': groups
+          .map(
+            (g) => <String, dynamic>{
+              'group': g.group,
+              'confidence': g.confidence,
+            },
+          )
+          .toList(growable: false),
+      'triage_level': decision.outcome.name,
+      'triage_reason': decision.reason,
+      'related_category': contextData['related_category'],
+      'texture': contextData['texture'],
+      'body_area': contextData['body_area'],
+      'condition_symptoms': contextData['condition_symptoms'],
+      'other_symptoms': contextData['other_symptoms'],
+      'duration': contextData['duration'],
+    };
+  }
+
+  // ignore: unused_element
   void _navigateToError() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(

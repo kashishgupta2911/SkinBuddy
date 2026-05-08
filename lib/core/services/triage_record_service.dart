@@ -125,4 +125,73 @@ class TriageRecordService {
 
     return TriageRecord.fromFirestore(snapshot.docs.first);
   }
+
+  /// Full triage report for the scan → context → analyze flow (Gemini fields updated later).
+  Future<DocumentReference<Map<String, dynamic>>> createReport({
+    required List<PredictedGroup> predictedGroups,
+    required TriageDecision decision,
+    required Map<String, dynamic> contextData,
+    required String imagePath,
+    required String modelVersion,
+    bool consentToStoreImagePath = false,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError(
+          'User must be authenticated before saving triage records.');
+    }
+    final uid = user.uid;
+
+    final topGroup =
+        predictedGroups.isNotEmpty ? predictedGroups.first.group : 'unknown';
+
+    final payload = <String, dynamic>{
+      'body_part': topGroup,
+      'notes': decision.reason,
+      'predicted_group': topGroup,
+      'predicted_groups':
+          predictedGroups.map((g) => g.toFirestoreMap()).toList(growable: false),
+      'related_category': contextData['related_category'],
+      'texture': contextData['texture'],
+      'body_area': contextData['body_area'],
+      'condition_symptoms': contextData['condition_symptoms'],
+      'other_symptoms': contextData['other_symptoms'],
+      'duration': contextData['duration'],
+      'timestamp': FieldValue.serverTimestamp(),
+      'triage_level': decision.outcome.name,
+      'urgency': decision.outcome.name == 'urgent' ? 'Urgent' : 'Low urgency',
+      'model_version': modelVersion,
+      'explanation': null,
+      'next_steps': null,
+      'gemini_error': null,
+    };
+
+    if (consentToStoreImagePath) {
+      payload['imagePath'] = imagePath;
+    }
+
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('triage_records')
+        .add(payload);
+  }
+
+  Future<void> updateReportCopy({
+    required DocumentReference<Map<String, dynamic>> ref,
+    required String explanation,
+    required List<String> nextSteps,
+    String? geminiError,
+  }) async {
+    final data = <String, dynamic>{
+      'explanation': explanation,
+      'next_steps': nextSteps,
+    };
+    if (geminiError != null) {
+      data['gemini_error'] = geminiError;
+    } else {
+      data['gemini_error'] = FieldValue.delete();
+    }
+    await ref.update(data);
+  }
 }

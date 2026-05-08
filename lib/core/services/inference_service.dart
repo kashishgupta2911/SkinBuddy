@@ -13,6 +13,19 @@ class PredictionResult {
   final double confidence;
 }
 
+/// One model hypothesis with softmax probability (used for reports and Gemini).
+class PredictedGroup {
+  const PredictedGroup({required this.group, required this.confidence});
+
+  final String group;
+  final double confidence;
+
+  Map<String, dynamic> toFirestoreMap() => {
+        'group': group,
+        'confidence': confidence,
+      };
+}
+
 class InferenceService {
   InferenceService({
     this.modelAssetPath = 'assets/models/model.tflite',
@@ -33,6 +46,19 @@ class InferenceService {
   }
 
   Future<PredictionResult> predict(String imagePath) async {
+    final groups = await predictGroups(imagePath, limit: 1);
+    if (groups.isEmpty) {
+      return const PredictionResult(label: 'unknown', confidence: 0);
+    }
+    final top = groups.first;
+    return PredictionResult(label: top.group, confidence: top.confidence);
+  }
+
+  /// Ranked list of `{group, confidence}` (softmax), longest-first by confidence.
+  Future<List<PredictedGroup>> predictGroups(
+    String imagePath, {
+    int limit = 10,
+  }) async {
     await initialize();
 
     final Uint8List bytes = await File(imagePath).readAsBytes();
@@ -55,17 +81,26 @@ class InferenceService {
     );
 
     _interpreter!.run(input, output);
-    final scores = output.first;
-    int maxIndex = 0;
-    for (int i = 1; i < scores.length; i++) {
-      if (scores[i] > scores[maxIndex]) {
-        maxIndex = i;
-      }
+    final raw = output.first;
+    final classCount = _labels.length;
+    if (classCount == 0) {
+      return const <PredictedGroup>[];
     }
 
-    final confidence = _softmaxConfidence(scores, maxIndex);
-    final label = maxIndex < _labels.length ? _labels[maxIndex] : 'unknown';
-    return PredictionResult(label: label, confidence: confidence);
+    final logits = raw.sublist(0, classCount);
+    final probs = _softmaxProbs(logits);
+
+    final entries = List<PredictedGroup>.generate(
+      classCount,
+      (i) => PredictedGroup(
+        group: _labels[i],
+        confidence: probs[i],
+      ),
+    );
+    entries.sort((a, b) => b.confidence.compareTo(a.confidence));
+
+    final cap = math.min(limit, entries.length);
+    return entries.sublist(0, cap);
   }
 
   Future<List<String>> _loadLabels(String assetPath) async {
@@ -91,13 +126,16 @@ class InferenceService {
     ];
   }
 
-  double _softmaxConfidence(List<double> logits, int chosenIndex) {
+  List<double> _softmaxProbs(List<double> logits) {
+    if (logits.isEmpty) {
+      return const <double>[];
+    }
     final maxLogit = logits.reduce(math.max);
     final expValues = logits.map((l) => math.exp(l - maxLogit)).toList();
     final denom = expValues.fold<double>(0, (sum, v) => sum + v);
     if (denom == 0) {
-      return 0;
+      return List<double>.filled(logits.length, 0);
     }
-    return expValues[chosenIndex] / denom;
+    return expValues.map((v) => v / denom).toList(growable: false);
   }
 }
