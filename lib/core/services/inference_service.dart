@@ -26,6 +26,25 @@ class PredictedGroup {
       };
 }
 
+// class InferenceService {
+//   Future<Map<String, dynamic>> analyzeImage(String path) async {
+//     final request = http.MultipartRequest(
+//       'POST',
+//       Uri.parse('https://your-render-url.onrender.com/predict'),
+//     );
+//
+//     request.files.add(
+//       await http.MultipartFile.fromPath('file', path),
+//     );
+//
+//     final response = await request.send();
+//
+//     final body = await response.stream.bytesToString();
+//
+//     return jsonDecode(body);
+//   }
+// }
+
 class InferenceService {
   InferenceService({
     this.modelAssetPath = 'assets/models/model.tflite',
