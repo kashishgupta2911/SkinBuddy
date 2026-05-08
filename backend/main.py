@@ -18,13 +18,11 @@ def root():
 @app.post("/predict")
 async def predict_image(file: UploadFile = File(...)):
 
-    # Save uploaded image
     file_path = UPLOAD_DIR / file.filename
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Run inference
     result = predict(str(file_path))
 
     return result
