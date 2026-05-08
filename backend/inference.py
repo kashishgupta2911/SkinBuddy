@@ -18,7 +18,7 @@ from utils import (
 )
 
 # Load model once globally
-MODEL_PATH = "results/hybrid_model.pt"
+MODEL_PATH = "model/hybrid_model.pt"
 MODE = "paper4"
 
 # Classes
