@@ -2,8 +2,8 @@ fastapi
 uvicorn
 torch
 torchvision
-pillow
 numpy
 pandas
 scikit-learn
+pillow
 python-multipart
