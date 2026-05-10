@@ -21,7 +21,7 @@ class TriageRecordService {
   final FirebaseStorage _storage;
 
   Future<void> saveRecord({
-    required PredictionResult prediction,
+    required List<dynamic> predictedGroups,
     required String triageLevel,
     required String imagePath,
 
@@ -34,6 +34,7 @@ class TriageRecordService {
 
     required String nextSteps,
   }) async {
+
     final user = _auth.currentUser;
 
     if (user == null) {
@@ -63,44 +64,54 @@ class TriageRecordService {
     // Upload image
     await storageRef.putFile(File(imagePath));
 
-    // Get public download URL
-    final imageUrl = await storageRef.getDownloadURL();
+    // Get public image URL
+    final imageUrl =
+    await storageRef.getDownloadURL();
 
-    // Get saved user info (age range)
+    // User age range
     final userDoc = await _firestore
         .collection('users')
         .doc(uid)
         .get();
 
     final userData = userDoc.data();
-    final ageRange = userData?['age_range'] ?? '';
+
+    final ageRange =
+        userData?['age_range'] ?? '';
 
     // Save Firestore document
     await docRef.set({
       'img_url': imageUrl,
-      'timestamp': FieldValue.serverTimestamp(),
+
+      'timestamp':
+      FieldValue.serverTimestamp(),
+
       'createdAt': Timestamp.now(),
 
       // User metadata
       'age_range': ageRange,
 
       // Context metadata
-      'related_category': relatedCategory,
+      'related_category':
+      relatedCategory,
+
       'texture': texture,
+
       'body_area': bodyArea,
-      'condition_symptoms': conditionSymptoms,
-      'other_symptoms': otherSymptoms,
+
+      'condition_symptoms':
+      conditionSymptoms,
+
+      'other_symptoms':
+      otherSymptoms,
+
       'duration': duration,
 
       // Model outputs
       'triage_level': triageLevel,
 
-      'predicted_groups': [
-        {
-          'name': prediction.label,
-          'confidence': prediction.confidence,
-        }
-      ],
+      'predicted_groups':
+      predictedGroups,
     });
   }
 

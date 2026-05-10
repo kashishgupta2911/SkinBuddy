@@ -48,91 +48,208 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   }
 
   Future<void> _startAnalysis() async {
+
     final inference = InferenceService();
-    final triageRecords = TriageRecordService();
-    final gemini = GeminiTriageCopyService();
+
+    final triageRecords =
+    TriageRecordService();
+
+    final gemini =
+    GeminiTriageCopyService();
 
     try {
-      var groups = await inference.predictGroups(widget.imagePath);
+
+      final contextPayload =
+      Map<String, dynamic>.from(
+        widget.contextData,
+      );
+
+      // CALL FASTAPI MODEL
+      final response =
+      await inference.analyzeImage(
+        imagePath: widget.imagePath,
+        metadata: contextPayload,
+      );
+
+      // PARSE predicted_groups
+      final List<dynamic> rawGroups =
+          response['predicted_groups'] ?? [];
+
+      List<PredictedGroup> groups =
+      rawGroups.map((g) {
+
+        return PredictedGroup(
+          group: g['name'],
+          confidence:
+          (g['confidence'] as num)
+              .toDouble(),
+        );
+
+      }).toList();
+
+      // fallback safety
       if (groups.isEmpty) {
-        groups = [const PredictedGroup(group: 'unknown', confidence: 0)];
+
+        groups = [
+          const PredictedGroup(
+            group: 'unknown',
+            confidence: 0,
+          )
+        ];
       }
+
+      // TOP PREDICTION
       final top = groups.first;
+
       final prediction =
-          PredictionResult(label: top.group, confidence: top.confidence);
-      final decision = TriageLogic.evaluate(prediction);
+      PredictionResult(
+        label: top.group,
+        confidence: top.confidence,
+      );
 
-      final contextPayload = Map<String, dynamic>.from(widget.contextData);
+      // TRIAGE LOGIC
+      final decision =
+      TriageLogic.evaluate(
+        prediction,
+      );
 
-      final docRef = await triageRecords.createReport(
+      // SAVE REPORT
+      final docRef =
+      await triageRecords.createReport(
         predictedGroups: groups,
         decision: decision,
         contextData: contextPayload,
         imagePath: widget.imagePath,
-        modelVersion: 'mobilenetv2-skinbuddy-v1',
+        modelVersion:
+        'hybrid-resnet-fcrn-v1',
         consentToStoreImagePath: false,
       );
 
-      var explanation = '';
-      var nextSteps = <String>[];
+      String explanation = '';
+
+      List<String> nextSteps = [];
+
       String? geminiError;
 
+      // GEMINI REPORT GENERATION
       if (gemini.isConfigured) {
+
         try {
-          final copy = await gemini.generateExplanationAndNextSteps(
-            triagePayload: _buildGeminiPayload(
+
+          final copy =
+          await gemini
+              .generateExplanationAndNextSteps(
+            triagePayload:
+            _buildGeminiPayload(
               groups: groups,
               decision: decision,
-              contextData: contextPayload,
+              contextData:
+              contextPayload,
             ),
           );
-          explanation = copy.explanation;
-          nextSteps = copy.nextSteps;
-          await triageRecords.updateReportCopy(
+
+          explanation =
+              copy.explanation;
+
+          nextSteps =
+              copy.nextSteps;
+
+          await triageRecords
+              .updateReportCopy(
             ref: docRef,
-            explanation: explanation,
-            nextSteps: nextSteps,
+            explanation:
+            explanation,
+            nextSteps:
+            nextSteps,
           );
+
         } catch (e) {
-          geminiError = e.toString();
-          await triageRecords.updateReportCopy(
+
+          geminiError =
+              e.toString();
+
+          await triageRecords
+              .updateReportCopy(
             ref: docRef,
             explanation: '',
             nextSteps: const [],
-            geminiError: geminiError,
+            geminiError:
+            geminiError,
           );
         }
+
       } else {
-        geminiError = 'AI summary is unavailable (API key not configured).';
-        await triageRecords.updateReportCopy(
+
+        geminiError =
+        'AI summary unavailable.';
+
+        await triageRecords
+            .updateReportCopy(
           ref: docRef,
           explanation: '',
           nextSteps: const [],
-          geminiError: geminiError,
+          geminiError:
+          geminiError,
         );
       }
 
+      // NAVIGATE TO REPORT
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
+
+      Navigator.of(context)
+          .pushReplacement(
+
         MaterialPageRoute(
-          builder: (_) => ReportScreen(
-            viewData: TriageReportViewData(
-              imagePath: widget.imagePath,
-              predictedGroups: groups,
-              isUrgent: decision.outcome == TriageOutcome.urgent,
-              contextData: contextPayload,
-              explanation: explanation,
-              nextSteps: nextSteps,
-              geminiError: geminiError,
-            ),
-          ),
+          builder: (_) =>
+              ReportScreen(
+
+                viewData:
+                TriageReportViewData(
+
+                  imagePath:
+                  widget.imagePath,
+
+                  predictedGroups:
+                  groups,
+
+                  isUrgent:
+                  decision.outcome ==
+                      TriageOutcome
+                          .urgent,
+
+                  contextData:
+                  contextPayload,
+
+                  explanation:
+                  explanation,
+
+                  nextSteps:
+                  nextSteps,
+
+                  geminiError:
+                  geminiError,
+                ),
+              ),
         ),
       );
-    } catch (_) {
+
+    } catch (e) {
+
+      debugPrint(
+        'Analysis error: $e',
+      );
+
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
+
+      Navigator.of(context)
+          .pushReplacement(
+
         MaterialPageRoute(
-          builder: (_) => ErrorScreen(imagePath: widget.imagePath),
+          builder: (_) =>
+              ErrorScreen(
+                imagePath:
+                widget.imagePath,
+              ),
         ),
       );
     }
@@ -147,7 +264,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
       'predicted_groups': groups
           .map(
             (g) => <String, dynamic>{
-              'group': g.group,
+              'name': g.group,
               'confidence': g.confidence,
             },
           )
