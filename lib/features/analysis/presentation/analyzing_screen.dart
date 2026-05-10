@@ -99,19 +99,11 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         ];
       }
 
-      // TOP PREDICTION
-      final top = groups.first;
-
-      final prediction =
-      PredictionResult(
-        label: top.group,
-        confidence: top.confidence,
-      );
-
       // TRIAGE LOGIC
       final decision =
       TriageLogic.evaluate(
-        prediction,
+        predictedGroups: groups,
+        contextData: contextPayload,
       );
 
       // SAVE REPORT
