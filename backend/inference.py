@@ -105,5 +105,5 @@ def predict(
         })
 
     return {
-        "predicted_groups": predicted_groups
+        "predicted_groups": predictions
     }
