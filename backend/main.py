@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import JSONResponse
 from inference import predict
 
 from pathlib import Path
@@ -10,9 +11,11 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
-    return {"message": "SkinBuddy API running"}
+    return JSONResponse(
+        {"message": "SkinBuddy API running"}
+    )
 
 
 @app.post("/predict")
