@@ -14,7 +14,7 @@ class BackendWarmupService {
             _lastWake!,
           );
 
-      if (diff.inMinutes < 10) {
+      if (diff.inMinutes < 14) {
         debugPrint(
           'Skipping warmup (recently warmed)',
         );
