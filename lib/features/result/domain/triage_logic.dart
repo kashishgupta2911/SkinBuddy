@@ -2,7 +2,7 @@ import '../../../core/services/inference_service.dart';
 
 enum TriageOutcome {
   nonurgent,
-  expedited,
+  expedite,
   urgent,
 }
 
@@ -176,7 +176,7 @@ class TriageLogic {
       case 'Bacterial_Follicular':
 
         outcome =
-            TriageOutcome.expedited;
+            TriageOutcome.expedite;
 
         reason =
         'Likely bacterial or follicular pattern. Prompt assessment is recommended.';
@@ -185,7 +185,7 @@ class TriageLogic {
       case 'Urticarial_Hypersensitivity':
 
         outcome =
-            TriageOutcome.expedited;
+            TriageOutcome.expedite;
 
         reason =
         'Likely urticarial or hypersensitivity pattern. Prompt assessment is recommended.';
@@ -194,7 +194,7 @@ class TriageLogic {
       case 'Viral':
 
         outcome =
-            TriageOutcome.expedited;
+            TriageOutcome.expedite;
 
         reason =
         'Likely viral eruption pattern. Prompt assessment is recommended.';
@@ -212,7 +212,7 @@ class TriageLogic {
       default:
 
         outcome =
-            TriageOutcome.expedited;
+            TriageOutcome.expedite;
 
         reason =
         'Clinical review is recommended due to prediction uncertainty.';
@@ -261,7 +261,7 @@ class TriageLogic {
     ) {
 
       outcome =
-          TriageOutcome.expedited;
+          TriageOutcome.expedite;
 
       reason =
       'Symptoms or affected body areas suggest more prompt clinical review may be appropriate.';
@@ -274,7 +274,7 @@ class TriageLogic {
     ) {
 
       outcome =
-          TriageOutcome.expedited;
+          TriageOutcome.expedite;
 
       reason =
       'Head or neck fungal involvement may require prompt clinical review.';
@@ -319,7 +319,7 @@ class TriageLogic {
       ) {
 
         outcome =
-            TriageOutcome.expedited;
+            TriageOutcome.expedite;
       }
 
       reason =
@@ -341,7 +341,7 @@ class TriageLogic {
       ) {
 
         outcome =
-            TriageOutcome.expedited;
+            TriageOutcome.expedite;
       }
 
       reason =
@@ -363,7 +363,7 @@ class TriageLogic {
       ) {
 
         outcome =
-            TriageOutcome.expedited;
+            TriageOutcome.expedite;
       }
 
       reason =

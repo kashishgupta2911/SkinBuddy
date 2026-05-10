@@ -68,9 +68,20 @@ class _ScanEntry {
 
     if (cleaned.isEmpty) return 'No triage level';
 
-    return cleaned[0].toUpperCase() + cleaned.substring(1);
-  }
+    switch (cleaned) {
+      case 'expedited':
+        return 'Expedite';
 
+      case 'nonurgent':
+        return 'Nonurgent';
+
+      case 'urgent':
+        return 'Urgent';
+
+      default:
+        return cleaned[0].toUpperCase() + cleaned.substring(1);
+    }
+  }
   static String _formatTimestamp(DateTime timestamp) {
     const months = <String>[
       'January',

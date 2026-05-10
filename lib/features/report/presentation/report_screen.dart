@@ -22,8 +22,8 @@ class ReportScreen extends StatelessWidget {
       case 'urgent':
         return 'Urgent';
 
-      case 'expedited':
-        return 'Expedited';
+      case 'expedite':
+        return 'Expedite';
 
       case 'nonurgent':
       default:
@@ -39,7 +39,7 @@ class ReportScreen extends StatelessWidget {
       case 'urgent':
         return AppColors.redChip;
 
-      case 'expedited':
+      case 'expedite':
         return AppColors.yellowChip;
 
       case 'nonurgent':
@@ -56,7 +56,7 @@ class ReportScreen extends StatelessWidget {
       case 'urgent':
         return AppColors.redText;
 
-      case 'expedited':
+      case 'expedite':
         return AppColors.yellowText;
 
       case 'nonurgent':
@@ -73,7 +73,7 @@ class ReportScreen extends StatelessWidget {
       case 'urgent':
         return 'Consult a healthcare professional soon';
 
-      case 'expedited':
+      case 'expedite':
         return 'Medical follow-up recommended';
 
       case 'nonurgent':
