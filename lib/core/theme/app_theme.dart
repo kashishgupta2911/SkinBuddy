@@ -22,6 +22,9 @@ abstract final class AppColors {
   static const Color iconBg = Color(0xFFE8DDD0);
   static const Color navUnselected = Color(0xFFB0A090);
   static const Color tipCardBg = Color(0xFFFFFBF8);
+  static const confidenceHigh = Color(0xFF3B82F6); // blue
+  static const confidenceModerate = Color(0xFFF59E0B); // amber
+  static const confidenceLow = Color(0xFFEF4444); // soft red
 }
 
 abstract final class AppSpacing {
