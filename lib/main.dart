@@ -7,6 +7,24 @@ import 'features/onboarding/presentation/onboarding_screen.dart';
 import 'features/shell/app_shell.dart';
 import 'firebase_options.dart';
 
+import 'package:http/http.dart' as http;
+
+Future<void> warmupBackend() async {
+  try {
+    final response = await http.get(
+      Uri.parse('https://skinbuddy.onrender.com/health'),
+    );
+
+    debugPrint(
+      'Render warmup status: ${response.statusCode}',
+    );
+  } catch (e) {
+    debugPrint(
+      'Render warmup failed: $e',
+    );
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -14,8 +32,12 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Wake Render backend
+  await warmupBackend();
+
   // Remove old anonymous login sessions
   final currentUser = FirebaseAuth.instance.currentUser;
+
   if (currentUser != null && currentUser.isAnonymous) {
     await FirebaseAuth.instance.signOut();
   }

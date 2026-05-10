@@ -182,6 +182,9 @@ def root():
         {"message": "SkinBuddy API running"}
     )
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 @app.post("/predict")
 async def predict_image(
