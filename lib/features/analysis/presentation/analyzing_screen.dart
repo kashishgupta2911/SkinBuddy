@@ -56,6 +56,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
 
     final gemini =
     GeminiTriageCopyService();
+    debugPrint('Gemini configured: ${gemini.isConfigured}');
 
     try {
 
@@ -127,6 +128,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
       String? geminiError;
 
       // GEMINI REPORT GENERATION
+      debugPrint('Gemini configured: ${gemini.isConfigured}');
       if (gemini.isConfigured) {
 
         try {
@@ -153,17 +155,17 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
             explanation
           );
 
-        } catch (e) {
+        } catch (e, stackTrace) {
 
-          geminiError =
-              e.toString();
+          debugPrint('GEMINI ERROR: $e');
+          debugPrintStack(stackTrace: stackTrace);
 
-          await triageRecords
-              .updateReportCopy(
+          geminiError = e.toString();
+
+          await triageRecords.updateReportCopy(
             ref: docRef,
             explanation: '',
-            geminiError:
-            geminiError,
+            geminiError: geminiError,
           );
         }
 
