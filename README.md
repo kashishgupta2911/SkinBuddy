@@ -65,7 +65,7 @@ F --> G[Prediction Groups + Confidence Scores]
 
 G --> H[Triage Logic Engine]
 
-H --> I[Urgent or Non-Urgent Recommendation]
+H --> I[Urgency Recommendation]
 
 I --> J[Gemini Explanation Generation]
 
