@@ -1,9 +1,11 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 fastapi
 uvicorn
 torch
 torchvision
 numpy
-pandas
-scikit-learn
 pillow
 python-multipart
+scikit-learn
+pandas
