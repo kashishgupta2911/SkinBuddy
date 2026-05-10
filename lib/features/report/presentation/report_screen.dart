@@ -215,7 +215,8 @@ class ReportScreen extends StatelessWidget {
   }
 
   Widget _buildPredictionsCard() {
-    final groups = viewData.predictedGroups;
+    final groups = [...viewData.predictedGroups]
+      ..sort((a, b) => b.confidence.compareTo(a.confidence));
     return _sectionCard(
       title: 'Model predictions',
       subtitle:
@@ -242,26 +243,54 @@ class ReportScreen extends StatelessWidget {
   }
 
   Widget _predictionRow(PredictedGroup g) {
-    final pct = (g.confidence * 100).clamp(0.0, 100.0).toStringAsFixed(1);
-    return Row(
+    final confidence = g.confidence.clamp(0.0, 1.0);
+    final pct = (confidence * 100).toStringAsFixed(1);
+
+    Color barColor;
+
+    if (confidence >= 0.75) {
+      barColor = AppColors.redText;
+    } else if (confidence >= 0.45) {
+      barColor = AppColors.yellowText;
+    } else {
+      barColor = AppColors.greenText;
+    }
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            g.group.replaceAll('_', ' '),
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                g.group.replaceAll('_', ' '),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ),
-          ),
+            Text(
+              '$pct%',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: barColor,
+              ),
+            ),
+          ],
         ),
-        Text(
-          '$pct%',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
+
+        const SizedBox(height: 8),
+
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: confidence,
+            minHeight: 10,
+            backgroundColor: AppColors.iconBg,
+            valueColor: AlwaysStoppedAnimation(barColor),
           ),
         ),
       ],
