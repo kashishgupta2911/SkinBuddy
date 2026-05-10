@@ -5,15 +5,13 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 /// Model-generated triage-oriented copy (not a diagnosis).
 class GeminiTriageCopy {
   const GeminiTriageCopy({
-    required this.explanation,
-    required this.nextSteps,
+    required this.explanation
   });
 
   final String explanation;
-  final List<String> nextSteps;
 }
 
-/// Calls Gemini to produce JSON `explanation` + `next_steps` from report context.
+/// Calls Gemini to produce JSON `explanation` from report context.
 ///
 /// API key: pass [apiKey] or compile with `--dart-define=GEMINI_API_KEY=your_key`.
 /// Client-side keys are easy to extract; prefer a backend proxy for production.
@@ -39,7 +37,7 @@ Rules:
 - Output must follow the JSON schema only; no markdown fences or extra keys.
 ''';
 
-  Future<GeminiTriageCopy> generateExplanationAndNextSteps({
+  Future<GeminiTriageCopy> generateExplanation({
     required Map<String, dynamic> triagePayload,
   }) async {
     if (!isConfigured) {
@@ -54,14 +52,9 @@ Rules:
         'explanation': Schema.string(
           description:
               '2–5 short paragraphs: context, uncertainty, triage tone, closing disclaimer sentence.',
-        ),
-        'next_steps': Schema.array(
-          items: Schema.string(),
-          description:
-              '3–6 concise bullet strings: safe self-care, monitoring, when to seek care.',
-        ),
+        )
       },
-      requiredProperties: ['explanation', 'next_steps'],
+      requiredProperties: ['explanation'],
     );
 
     final model = GenerativeModel(
@@ -76,7 +69,7 @@ Rules:
     );
 
     final userText = '''
-Using the following structured inputs, write the JSON fields "explanation" and "next_steps".
+Using the following structured inputs, write the JSON fields "explanation".
 
 INPUT_JSON:
 ${JsonEncoder.withIndent('  ').convert(triagePayload)}
@@ -94,21 +87,11 @@ ${JsonEncoder.withIndent('  ').convert(triagePayload)}
     }
 
     final explanation = decoded['explanation'];
-    final rawSteps = decoded['next_steps'];
     if (explanation is! String || explanation.trim().isEmpty) {
       throw FormatException('Missing or invalid "explanation"');
     }
-    if (rawSteps is! List) {
-      throw FormatException('Missing or invalid "next_steps"');
-    }
-    final nextSteps = rawSteps
-        .map((e) => e is String ? e.trim() : '$e'.trim())
-        .where((s) => s.isNotEmpty)
-        .toList(growable: false);
-
     return GeminiTriageCopy(
       explanation: explanation.trim(),
-      nextSteps: nextSteps,
     );
   }
 }

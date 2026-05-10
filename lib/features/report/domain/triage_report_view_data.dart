@@ -8,7 +8,6 @@ class TriageReportViewData {
     required this.isUrgent,
     required this.contextData,
     required this.explanation,
-    required this.nextSteps,
     this.geminiError,
   });
 
@@ -17,6 +16,5 @@ class TriageReportViewData {
   final bool isUrgent;
   final Map<String, dynamic> contextData;
   final String explanation;
-  final List<String> nextSteps;
   final String? geminiError;
 }

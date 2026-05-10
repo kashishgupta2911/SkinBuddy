@@ -120,14 +120,9 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         decision: decision,
         contextData: contextPayload,
         imagePath: widget.imagePath,
-        modelVersion:
-        'scin_improved_v3',
-        consentToStoreImagePath: false,
       );
 
       String explanation = '';
-
-      List<String> nextSteps = [];
 
       String? geminiError;
 
@@ -138,7 +133,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
 
           final copy =
           await gemini
-              .generateExplanationAndNextSteps(
+              .generateExplanation(
             triagePayload:
             _buildGeminiPayload(
               groups: groups,
@@ -151,16 +146,11 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
           explanation =
               copy.explanation;
 
-          nextSteps =
-              copy.nextSteps;
-
           await triageRecords
               .updateReportCopy(
             ref: docRef,
             explanation:
-            explanation,
-            nextSteps:
-            nextSteps,
+            explanation
           );
 
         } catch (e) {
@@ -172,7 +162,6 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
               .updateReportCopy(
             ref: docRef,
             explanation: '',
-            nextSteps: const [],
             geminiError:
             geminiError,
           );
@@ -187,7 +176,6 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
             .updateReportCopy(
           ref: docRef,
           explanation: '',
-          nextSteps: const [],
           geminiError:
           geminiError,
         );
@@ -222,9 +210,6 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
 
                   explanation:
                   explanation,
-
-                  nextSteps:
-                  nextSteps,
 
                   geminiError:
                   geminiError,

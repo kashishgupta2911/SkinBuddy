@@ -59,7 +59,7 @@ class OnboardingScreen extends StatelessWidget {
                             icon: Icons.menu_book_rounded,
                             title: 'Get guidance',
                             subtitle:
-                                'Receive an urgency assessment and next steps',
+                                'Receive an urgency assessment',
                           ),
                           const SizedBox(height: AppSpacing.xl),
                           _buildDisclaimer(),

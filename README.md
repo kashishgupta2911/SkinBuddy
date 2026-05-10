@@ -74,17 +74,14 @@ users
                 ├── age_range
                 ├── triage_level
                 ├── predicted_groups
-                ├── explanation
-                └── next_steps
+                └── explanation
 ```
 
 Each triage record includes:
-- body_part
-- notes
-- predicted_group
+- body_area
+- predicted_groups
 - timestamp
 - triage_level
-- urgency
 
 ## ML
 cd ml

@@ -26,7 +26,6 @@ class CaptureController {
       conditionSymptoms: const [],
       otherSymptoms: const [],
       duration: '',
-      nextSteps: decision.reason,
     );
 
     return {

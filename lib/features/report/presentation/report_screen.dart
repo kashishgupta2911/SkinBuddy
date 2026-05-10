@@ -55,8 +55,6 @@ class ReportScreen extends StatelessWidget {
                       const SizedBox(height: AppSpacing.md),
                     _buildExplanationCard(),
                     const SizedBox(height: AppSpacing.md),
-                    _buildNextStepsCard(),
-                    const SizedBox(height: AppSpacing.md),
                     _buildSelfCareTipsLink(),
                     const SizedBox(height: AppSpacing.lg),
                     _buildActionButtons(),
@@ -319,55 +317,6 @@ class ReportScreen extends StatelessWidget {
           height: 1.5,
         ),
       ),
-    );
-  }
-
-  Widget _buildNextStepsCard() {
-    final steps = viewData.nextSteps;
-    return _sectionCard(
-      title: 'Recommended next steps',
-      child: steps.isEmpty
-          ? const Text(
-              'Follow the urgency guidance above and consult a clinician if you are unsure.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (var i = 0; i < steps.length; i++) ...[
-                  if (i > 0) const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 6),
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          steps[i],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
     );
   }
 

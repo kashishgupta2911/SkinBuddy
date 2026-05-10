@@ -30,9 +30,7 @@ class TriageRecordService {
     required List<String> bodyArea,
     required List<String> conditionSymptoms,
     required List<String> otherSymptoms,
-    required String duration,
-
-    required String nextSteps,
+    required String duration
   }) async {
 
     final user = _auth.currentUser;
@@ -143,60 +141,95 @@ class TriageRecordService {
     required TriageDecision decision,
     required Map<String, dynamic> contextData,
     required String imagePath,
-    required String modelVersion,
-    bool consentToStoreImagePath = false,
   }) async {
     final user = _auth.currentUser;
+
     if (user == null) {
       throw StateError(
-          'User must be authenticated before saving triage records.');
+        'User must be authenticated before saving triage records.',
+      );
     }
+
     final uid = user.uid;
 
-    final topGroup =
-        predictedGroups.isNotEmpty ? predictedGroups.first.group : 'unknown';
-
-    final payload = <String, dynamic>{
-      'body_part': topGroup,
-      'notes': decision.reason,
-      'predicted_group': topGroup,
-      'predicted_groups':
-          predictedGroups.map((g) => g.toFirestoreMap()).toList(growable: false),
-      'related_category': contextData['related_category'],
-      'texture': contextData['texture'],
-      'body_area': contextData['body_area'],
-      'condition_symptoms': contextData['condition_symptoms'],
-      'other_symptoms': contextData['other_symptoms'],
-      'duration': contextData['duration'],
-      'timestamp': FieldValue.serverTimestamp(),
-      'triage_level': decision.outcome.name,
-      'urgency': decision.outcome.name == 'urgent' ? 'Urgent' : 'Low urgency',
-      'model_version': modelVersion,
-      'explanation': null,
-      'next_steps': null,
-      'gemini_error': null,
-    };
-
-    if (consentToStoreImagePath) {
-      payload['imagePath'] = imagePath;
-    }
-
-    return _firestore
+    // CREATE DOCUMENT FIRST
+    final docRef = _firestore
         .collection('users')
         .doc(uid)
         .collection('triage_records')
-        .add(payload);
+        .doc();
+
+    // UPLOAD IMAGE
+    final storageRef = _storage
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('triage_records')
+        .child(docRef.id)
+        .child('input_image.jpg');
+
+    await storageRef.putFile(File(imagePath));
+
+    final imageUrl = await storageRef.getDownloadURL();
+
+    // GET USER AGE RANGE
+    final userDoc = await _firestore
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    final userData = userDoc.data();
+
+    final ageRange =
+        userData?['age_range'] ?? '';
+
+    // SAVE ONLY THE FIELDS YOU WANT
+    await docRef.set({
+      'age_range': ageRange,
+
+      'body_area': contextData['body_area'],
+
+      'condition_symptoms':
+          contextData['condition_symptoms'],
+
+      'duration': contextData['duration'],
+
+      'explanation': '',
+
+      'img_url': imageUrl,
+
+      'other_symptoms':
+          contextData['other_symptoms'],
+
+      'predicted_groups':
+          predictedGroups
+              .map((g) => g.toFirestoreMap())
+              .toList(growable: false),
+
+      'related_category':
+          contextData['related_category'],
+
+      'texture': contextData['texture'],
+
+      'timestamp':
+          FieldValue.serverTimestamp(),
+
+      'triage_level':
+          decision.outcome.name,
+
+      'gemini_error': null,
+    });
+
+    return docRef;
   }
 
   Future<void> updateReportCopy({
     required DocumentReference<Map<String, dynamic>> ref,
     required String explanation,
-    required List<String> nextSteps,
     String? geminiError,
   }) async {
     final data = <String, dynamic>{
       'explanation': explanation,
-      'next_steps': nextSteps,
     };
     if (geminiError != null) {
       data['gemini_error'] = geminiError;
