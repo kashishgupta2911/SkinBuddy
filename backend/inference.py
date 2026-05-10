@@ -17,8 +17,11 @@ from utils import (
     tf_img,
 )
 
+from pathlib import Path
+
 # Load model once globally
-MODEL_PATH = "model/hybrid_model.pt"
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "model" / "hybrid_model.pt"
 MODE = "paper4"
 
 # Classes
@@ -37,11 +40,17 @@ model = HybridModel(
     meta_dim=meta_dim,
 ).to(DEVICE)
 
+print("Starting model load...")
+print(f"Model path: {MODEL_PATH}")
+print(f"Exists: {MODEL_PATH.exists()}")
+
 # Load weights
 state_dict = torch.load(
-    MODEL_PATH,
+    str(MODEL_PATH),
     map_location=DEVICE,
 )
+
+print("Model weights loaded.")
 
 model.load_state_dict(state_dict)
 model.eval()
