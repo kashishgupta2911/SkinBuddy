@@ -11,6 +11,18 @@ import '../../report/domain/triage_report_view_data.dart';
 import '../../report/presentation/report_screen.dart';
 import '../../result/domain/triage_logic.dart';
 
+String _confidenceLevel(double confidence) {
+  if (confidence >= 0.60) {
+    return 'high';
+  }
+
+  if (confidence >= 0.40) {
+    return 'moderate';
+  }
+
+  return 'low';
+}
+
 class AnalyzingScreen extends StatefulWidget {
   const AnalyzingScreen({
     super.key,
@@ -239,6 +251,12 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
     required TriageDecision decision,
     required Map<String, dynamic> contextData,
   }) {
+
+    final topConfidence =
+        groups.isNotEmpty
+        ? groups.first.confidence
+        : 0.0;
+
     return {
       'predicted_groups': groups
           .map(
@@ -248,14 +266,35 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
             },
           )
           .toList(growable: false),
-      'triage_level': decision.outcome.name,
-      'triage_reason': decision.reason,
-      'related_category': contextData['related_category'],
-      'texture': contextData['texture'],
-      'body_area': contextData['body_area'],
-      'condition_symptoms': contextData['condition_symptoms'],
-      'other_symptoms': contextData['other_symptoms'],
-      'duration': contextData['duration'],
+
+      'triage_level':
+          decision.outcome.name,
+
+      'triage_reason':
+          decision.reason,
+
+      'confidence_level':
+          _confidenceLevel(
+            topConfidence,
+          ),
+
+      'related_category':
+          contextData['related_category'],
+
+      'texture':
+          contextData['texture'],
+
+      'body_area':
+          contextData['body_area'],
+
+      'condition_symptoms':
+          contextData['condition_symptoms'],
+
+      'other_symptoms':
+          contextData['other_symptoms'],
+
+      'duration':
+          contextData['duration'],
     };
   }
 
