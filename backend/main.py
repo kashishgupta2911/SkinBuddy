@@ -1,9 +1,10 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from inference import predict
 
 from pathlib import Path
 import shutil
+import json
 
 app = FastAPI()
 
@@ -19,13 +20,21 @@ def root():
 
 
 @app.post("/predict")
-async def predict_image(file: UploadFile = File(...)):
+async def predict_image(
+    file: UploadFile = File(...),
+    metadata: str = Form(...)
+):
+
+    metadata_dict = json.loads(metadata)
 
     file_path = UPLOAD_DIR / file.filename
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    result = predict(str(file_path))
+    result = predict(
+        image_path=str(file_path),
+        metadata=metadata_dict,
+    )
 
     return result

@@ -95,16 +95,15 @@ def predict(
         k=min(top_k, len(CLASS_NAMES)),
     )
 
-    predictions = []
+    predicted_groups = []
 
     for prob, idx in zip(top_probs, top_idxs):
-        predictions.append({
+
+        predicted_groups.append({
             "name": CLASS_NAMES[idx.item()],
             "confidence": round(float(prob.item()), 4),
         })
 
     return {
-        "prediction": predictions[0]["name"],
-        "confidence": predictions[0]["confidence"],
-        "predictions": predictions,
+        "predicted_groups": predicted_groups
     }
