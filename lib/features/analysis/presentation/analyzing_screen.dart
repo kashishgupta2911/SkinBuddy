@@ -121,7 +121,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         contextData: contextPayload,
         imagePath: widget.imagePath,
         modelVersion:
-        'hybrid-resnet-fcrn-v1',
+        'scin_improved_v3',
         consentToStoreImagePath: false,
       );
 
