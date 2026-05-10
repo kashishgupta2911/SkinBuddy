@@ -33,9 +33,6 @@ flowchart TD
   - `label`
   - `confidence`
   - `triageOutcome`
-  - `triageReason`
-  - `modelVersion`
-  - `appVersion`
   - `createdAt`
 - `imagePath` is only written if explicit consent is enabled.
 

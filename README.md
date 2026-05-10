@@ -41,7 +41,7 @@ flowchart TD
 - Add the configuration file as `lib/firebase_options.dart`
 - Records are stored using the following structure `users/{uid}/triage_records/{recordId}`
 
-Structure
+## Structure
 ```
 users
    └── uid
@@ -70,17 +70,14 @@ users
                 ├── age_range
                 ├── triage_level
                 ├── predicted_groups
-                ├── explanation
-                └── next_steps
+                └── explanation
 ```
 
 Each triage record includes:
-- body_part
-- notes
-- predicted_group
+- body_area
+- predicted_groups
 - timestamp
 - triage_level
-- urgency
 
 ## ML
 cd ml
@@ -91,7 +88,9 @@ python src/convert_to_tflite.py
 Copy `ml/models/model.tflite` into `assets/models/model.tflite` after conversion.
 
 ## Start App
-- Run `flutter run`
+- Use `flutter run` to start the app
+- Run `flutter run --dart-define=GEMINI_API_KEY=YOUR_API_KEY` to include a Gemini API key for triage explanation generation
+- Run `flutter build apk --dart-define=GEMINI_API_KEY=YOUR_API_KEY` to build the APK with a Gemini API key
 
 ## Safety
 - SkinBuddy provides triage recommendations only.

@@ -18,15 +18,14 @@ class CaptureController {
 
     await _triageRecordService.saveRecord(
       prediction: prediction,
-      decision: decision,
+      triageLevel: decision.outcome.name,
       imagePath: imagePath,
       relatedCategory: '',
       texture: '',
-      bodyArea: [],
-      conditionSymptoms: [],
-      otherSymptoms: [],
+      bodyArea: const [],
+      conditionSymptoms: const [],
+      otherSymptoms: const [],
       duration: '',
-      nextSteps: '',
     );
 
     return {

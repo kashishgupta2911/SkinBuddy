@@ -2,62 +2,26 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/services/inference_service.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../history/domain/triage_record.dart';
+import '../domain/triage_report_view_data.dart';
 
 class ReportScreen extends StatelessWidget {
   const ReportScreen({
     super.key,
-    required this.imagePath,
-    required this.record,
+    required this.viewData,
   });
 
-  final String imagePath;
-  final TriageRecord record;
+  final TriageReportViewData viewData;
 
-  String get _urgencyTag {
-    final value = record.triageLevel.trim().toLowerCase();
-
-    if (value.isEmpty) return 'No triage level';
-
-    return value[0].toUpperCase() + value.substring(1);
-  }
-
-  Color get _tagBg {
-    switch (record.triageLevel.toLowerCase()) {
-      case 'urgent':
-        return AppColors.redChip;
-      case 'expedite':
-        return AppColors.yellowChip;
-      case 'nonurgent':
-      default:
-        return AppColors.greenChip;
-    }
-  }
-
-  Color get _tagText {
-    switch (record.triageLevel.toLowerCase()) {
-      case 'urgent':
-        return AppColors.redText;
-      case 'expedite':
-        return AppColors.yellowText;
-      case 'nonurgent':
-      default:
-        return AppColors.greenText;
-    }
-  }
-
-  String get _urgencySubtext {
-    switch (record.triageLevel.toLowerCase()) {
-      case 'urgent':
-        return 'Consult a professional';
-      case 'expedite':
-        return 'Monitor closely and consider medical advice';
-      case 'nonurgent':
-      default:
-        return 'Self-care recommended';
-    }
-  }
+  String get _urgencyTag => viewData.isUrgent ? 'Urgent' : 'Low urgency';
+  Color get _tagBg =>
+      viewData.isUrgent ? AppColors.redChip : AppColors.greenChip;
+  Color get _tagText =>
+      viewData.isUrgent ? AppColors.redText : AppColors.greenText;
+  String get _urgencySubtext => viewData.isUrgent
+      ? 'Consult a professional'
+      : 'Self-care recommended';
 
   @override
   Widget build(BuildContext context) {
@@ -79,9 +43,17 @@ class ReportScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
                     _buildUrgencyBadge(),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildDetectionCard(),
+                    _buildContextCard(),
                     const SizedBox(height: AppSpacing.md),
-                    _buildRecommendationsCard(),
+                    _buildPredictionsCard(),
+                    const SizedBox(height: AppSpacing.md),
+                    if (viewData.geminiError != null &&
+                        viewData.explanation.isEmpty)
+                      _buildGeminiErrorBanner(),
+                    if (viewData.geminiError != null &&
+                        viewData.explanation.isEmpty)
+                      const SizedBox(height: AppSpacing.md),
+                    _buildExplanationCard(),
                     const SizedBox(height: AppSpacing.md),
                     _buildSelfCareTipsLink(),
                     const SizedBox(height: AppSpacing.lg),
@@ -147,7 +119,7 @@ class ReportScreen extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Image.file(
-          File(imagePath),
+          File(viewData.imagePath),
           width: double.infinity,
           height: 220,
           fit: BoxFit.cover,
@@ -187,33 +159,172 @@ class ReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetectionCard() {
+  Widget _buildContextCard() {
+    final d = viewData.contextData;
+    final rows = <(String, String)>[
+      ('Related category', _asText(d['related_category'])),
+      ('Texture', _asText(d['texture'])),
+      ('Body areas', _joinList(d['body_area'])),
+      ('Skin symptoms', _joinList(d['condition_symptoms'])),
+      ('General symptoms', _joinList(d['other_symptoms'])),
+      ('Duration', _asText(d['duration'])),
+    ];
+
+    return _sectionCard(
+      title: 'Your context',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.sm),
+            _contextRow(rows[i].$1, rows[i].$2),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _contextRow(String label, String value) {
+    final display = value.isEmpty ? '—' : value;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 128,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            display,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textPrimary,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPredictionsCard() {
+    final groups = [...viewData.predictedGroups]
+      ..sort((a, b) => b.confidence.compareTo(a.confidence));
+    return _sectionCard(
+      title: 'Model predictions',
+      subtitle:
+          'Probabilities from on-device screening (not a diagnosis).',
+      child: groups.isEmpty
+          ? const Text(
+              'No prediction scores available.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < groups.length; i++) ...[
+                  if (i > 0) const SizedBox(height: AppSpacing.sm),
+                  _predictionRow(groups[i]),
+                ],
+              ],
+            ),
+    );
+  }
+
+  Widget _predictionRow(PredictedGroup g) {
+    final confidence = g.confidence.clamp(0.0, 1.0);
+    final pct = (confidence * 100).toStringAsFixed(1);
+
+    Color barColor;
+
+    if (confidence >= 0.75) {
+      barColor = AppColors.redText;
+    } else if (confidence >= 0.45) {
+      barColor = AppColors.yellowText;
+    } else {
+      barColor = AppColors.greenText;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                g.group.replaceAll('_', ' '),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Text(
+              '$pct%',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: barColor,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: confidence,
+            minHeight: 10,
+            backgroundColor: AppColors.iconBg,
+            valueColor: AlwaysStoppedAnimation(barColor),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGeminiErrorBanner() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.iconBg.withValues(alpha: 0.5)),
+        color: AppColors.yellowChip.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.yellowText.withValues(alpha: 0.25),
+        ),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'What we detected',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+          const Icon(
+            Icons.info_outline,
+            color: AppColors.yellowText,
+            size: 22,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            record.explanation,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.5,
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              viewData.geminiError ?? '',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+                height: 1.45,
+              ),
             ),
           ),
         ],
@@ -221,7 +332,28 @@ class ReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecommendationsCard() {
+  Widget _buildExplanationCard() {
+    final text = viewData.explanation.trim();
+    return _sectionCard(
+      title: 'What this may mean',
+      child: Text(
+        text.isEmpty
+            ? 'No AI-generated summary is available for this report.'
+            : text,
+        style: const TextStyle(
+          fontSize: 14,
+          color: AppColors.textSecondary,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String title,
+    String? subtitle,
+    required Widget child,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -235,26 +367,27 @@ class ReportScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Recommended next steps',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-
-          Text(
-            record.nextSteps.isNotEmpty
-                ? record.nextSteps
-                : 'No recommendations available.',
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.5,
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                height: 1.35,
+              ),
             ),
-          ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          child,
         ],
       ),
     );
@@ -328,6 +461,20 @@ class ReportScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static String _asText(Object? value) {
+    if (value == null) return '';
+    final s = '$value'.trim();
+    return s;
+  }
+
+  static String _joinList(Object? value) {
+    if (value is! List) return '';
+    return value
+        .map((e) => '$e'.trim())
+        .where((s) => s.isNotEmpty)
+        .join(', ');
   }
 }
 

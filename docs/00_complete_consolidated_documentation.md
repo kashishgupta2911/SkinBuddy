@@ -62,8 +62,6 @@ Fields:
 - `confidence`
 - `triageOutcome`
 - `triageReason`
-- `modelVersion`
-- `appVersion`
 - `createdAt`
 - `imagePath` (optional, only if consent is enabled)
 

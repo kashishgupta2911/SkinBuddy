@@ -7,7 +7,6 @@ class TriageRecord {
     required this.triageLevel,
     required this.predictedGroup,
     required this.explanation,
-    required this.nextSteps,
     required this.imgUrl,
     required this.timestamp,
   });
@@ -19,7 +18,6 @@ class TriageRecord {
   final String triageLevel;
   final String imgUrl;
   final String explanation;
-  final String nextSteps;
 
   factory TriageRecord.fromFirestore(
       QueryDocumentSnapshot<Map<String, dynamic>> doc,
@@ -58,10 +56,6 @@ class TriageRecord {
       explanation: explanation.isNotEmpty
           ? explanation
           : 'No explanation available.',
-
-      nextSteps: (data['next_steps'] as String?)?.trim().isNotEmpty == true
-          ? (data['next_steps'] as String).trim()
-          : 'No recommendations available.',
     );
   }
 
