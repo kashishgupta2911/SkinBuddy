@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../context/presentation/context_screen.dart';
 
+import '../../../core/services/backend_warmup_service.dart';
+
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
 
@@ -24,6 +26,7 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initCamera();
+    BackendWarmupService.warmup();
   }
 
   @override
