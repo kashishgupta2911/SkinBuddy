@@ -114,7 +114,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
       // TRIAGE LOGIC
       final decision =
       TriageLogic.evaluate(
-        predictedGroups: groups,
+        groups: groups,
         contextData: contextPayload,
       );
 
@@ -206,10 +206,8 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
                   predictedGroups:
                   groups,
 
-                  isUrgent:
-                  decision.outcome ==
-                      TriageOutcome
-                          .urgent,
+                  triageLevel:
+                  decision.outcome.name,
 
                   contextData:
                   contextPayload,
