@@ -135,6 +135,13 @@ class TriageLogic {
     TriageOutcome outcome;
     String reason;
 
+    print('TOP1: $top1Label (${top1.confidence})');
+    print('TOP2: $top2Label (${top2?.confidence})');
+
+    print('Condition symptoms: $conditionSymptoms');
+    print('Other symptoms: $otherSymptoms');
+    print('Body area: $bodyArea');
+
     switch (top1Label) {
 
       case 'Acneiform':
@@ -402,19 +409,98 @@ class TriageLogic {
   }
 
   static String _normalizeGroup(
-      String label,
-      ) {
+    String label,
+  ) {
 
-    return label
-        .replaceAll(
-      '_LowUrgency',
-      '',
-    )
-        .replaceAll(
-      '_Caution',
-      '',
-    )
-        .trim();
+    final normalized =
+        label
+            .replaceAll('_LowUrgency', '')
+            .replaceAll('_Caution', '')
+            .trim();
+
+    switch (normalized) {
+
+      // ----------------------------------
+      // ACNEIFORM
+      // ----------------------------------
+
+      case 'Acne':
+      case 'Acneiform':
+        return 'Acneiform';
+
+      // ----------------------------------
+      // ECZEMATOUS / DERMATITIS
+      // ----------------------------------
+
+      case 'Eczema':
+      case 'Dermatitis':
+      case 'Allergic Contact Dermatitis':
+      case 'Irritant Contact Dermatitis':
+      case 'Acute dermatitis':
+      case 'Eczematous_Dermatitis':
+        return 'Eczematous_Dermatitis';
+
+      // ----------------------------------
+      // URTICARIAL / HYPERSENSITIVITY
+      // ----------------------------------
+
+      case 'Urticaria':
+      case 'Hypersensitivity':
+      case 'Insect bites':
+      case 'Urticarial_Hypersensitivity':
+        return 'Urticarial_Hypersensitivity';
+
+      // ----------------------------------
+      // BACTERIAL / FOLLICULAR
+      // ----------------------------------
+
+      case 'Folliculitis':
+      case 'Impetigo':
+      case 'Bacterial_Follicular':
+        return 'Bacterial_Follicular';
+
+      // ----------------------------------
+      // FUNGAL
+      // ----------------------------------
+
+      case 'Tinea':
+      case 'Dermatophyte infections':
+      case 'Fungal':
+        return 'Fungal';
+
+      // ----------------------------------
+      // PAPULOSQUAMOUS / LICHENOID
+      // ----------------------------------
+
+      case 'Psoriasis':
+      case 'Lichen planus':
+      case 'Pityriasis rosea':
+      case 'Papulosquamous_Lichenoid':
+        return 'Papulosquamous_Lichenoid';
+
+      // ----------------------------------
+      // VIRAL
+      // ----------------------------------
+
+      case 'Herpes Zoster':
+      case 'Herpes Simplex':
+      case 'Viral exanthem':
+      case 'Viral':
+        return 'Viral';
+
+      // ----------------------------------
+      // DRUG / VASCULITIC / PURPURIC
+      // ----------------------------------
+
+      case 'Drug rash':
+      case 'Leukocytoclastic vasculitis':
+      case 'Purpuric eruptions':
+      case 'Drug_Vasculitic_Purpuric':
+        return 'Drug_Vasculitic_Purpuric';
+
+      default:
+        return normalized;
+    }
   }
 
   static const String _disclaimer =
