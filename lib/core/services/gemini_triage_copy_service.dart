@@ -18,7 +18,8 @@ class GeminiTriageCopy {
 class GeminiTriageCopyService {
   GeminiTriageCopyService({
     String? apiKey,
-    this.modelName = 'gemini-3.1-flash-lite-preview',
+    this.modelName = 'gemini-2.5-flash',
+//     this.modelName = 'gemini-3.1-flash-lite-preview',
   }) : _apiKey = apiKey ?? const String.fromEnvironment('GEMINI_API_KEY');
 
   final String _apiKey;
