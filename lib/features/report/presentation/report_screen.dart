@@ -230,7 +230,7 @@ class ReportScreen extends StatelessWidget {
     ];
 
     return _sectionCard(
-      title: 'Your context',
+      title: 'Your Context',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -318,7 +318,7 @@ class ReportScreen extends StatelessWidget {
         ],
 
         _sectionCard(
-          title: 'Model predictions',
+          title: 'Model Predictions',
           subtitle:
               'Probabilities from AI-assisted screening '
               '(not a medical diagnosis).',
@@ -504,7 +504,7 @@ class ReportScreen extends StatelessWidget {
   Widget _buildExplanationCard() {
     final text = viewData.explanation.trim();
     return _sectionCard(
-      title: 'What this may mean',
+      title: 'What This May Mean',
       child: Text(
         text.isEmpty
             ? 'No AI-generated summary is available for this report.'
