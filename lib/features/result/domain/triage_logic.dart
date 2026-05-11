@@ -335,17 +335,8 @@ class TriageLogic {
 
     if (lowConfidence) {
 
-      if (
-      outcome ==
-          TriageOutcome.nonurgent
-      ) {
-
-        outcome =
-            TriageOutcome.expedite;
-      }
-
       reason =
-      '$reason Clinical review is recommended because prediction confidence is low.';
+      '$reason Prediction confidence is low, so clinical review is recommended.';
     }
 
     // ----------------------------------

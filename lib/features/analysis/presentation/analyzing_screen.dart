@@ -255,6 +255,16 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         ? groups.first.confidence
         : 0.0;
 
+    final top1 =
+        groups.isNotEmpty
+        ? groups.first.group
+        : 'unknown';
+
+    final top2 =
+        groups.length > 1
+        ? groups[1].group
+        : null;
+
     return {
       'predicted_groups': groups
           .map(
@@ -265,17 +275,29 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
           )
           .toList(growable: false),
 
+      // TRIAGE OUTPUTS
       'triage_level':
           decision.outcome.name,
 
       'triage_reason':
           decision.reason,
 
+      'clinical_review_recommended':
+          decision.clinicalReviewRecommended,
+
+      // MODEL INTERPRETATION
       'confidence_level':
           _confidenceLevel(
             topConfidence,
           ),
 
+      'top1_prediction':
+          top1,
+
+      'top2_prediction':
+          top2,
+
+      // USER CONTEXT
       'related_category':
           contextData['related_category'],
 
