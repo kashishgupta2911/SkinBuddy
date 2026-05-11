@@ -327,16 +327,42 @@ class TriageLogic {
     }
 
     // ----------------------------------
-    // LOW CONFIDENCE SAFETY
+    // CONFIDENCE + AMBIGUITY SAFETY
     // ----------------------------------
 
-    final lowConfidence =
-        confidence < 0.40;
+    final top2Confidence =
+        top2?.confidence ?? 0.0;
 
-    if (lowConfidence) {
+    final confidenceGap =
+        confidence - top2Confidence;
+
+    // Very uncertain prediction
+    final veryLowConfidence =
+        confidence < 0.25;
+
+    // Prediction overlap / ambiguity
+    final ambiguousPrediction =
+        confidence < 0.40 &&
+        confidenceGap < 0.15;
+
+    bool clinicalReviewRecommended = false;
+
+    // Very weak prediction confidence
+    if (veryLowConfidence) {
+
+      clinicalReviewRecommended = true;
 
       reason =
-      '$reason Prediction confidence is low, so clinical review is recommended.';
+      '$reason Prediction confidence is limited, so professional clinical review is recommended.';
+    }
+
+    // Multiple categories look similarly likely
+    else if (ambiguousPrediction) {
+
+      clinicalReviewRecommended = true;
+
+      reason =
+      '$reason Some overlap between possible skin-pattern categories remains.';
     }
 
     // ----------------------------------
@@ -366,7 +392,7 @@ class TriageLogic {
       reason: reason,
       disclaimer: _disclaimer,
       clinicalReviewRecommended:
-      lowConfidence,
+        clinicalReviewRecommended,
     );
   }
 
