@@ -254,9 +254,8 @@ class TriageLogic {
     top1Label ==
         'Eczematous_Dermatitis' &&
         (
-            hasPain ||
-                hasHeadOrNeck ||
-                hasGenital
+            hasGenital ||
+            (hasPain && hasHeadOrNeck)
         )
     ) {
 
@@ -270,6 +269,7 @@ class TriageLogic {
     // fungal escalation
     if (
     top1Label == 'Fungal' &&
+        hasPain &&
         hasHeadOrNeck
     ) {
 
@@ -309,8 +309,13 @@ class TriageLogic {
 
     // systemic symptoms escalation
     if (
-    hasFever &&
-        hasFatigue
+      hasFever &&
+      hasFatigue &&
+      (
+        top1Label == 'Bacterial_Follicular' ||
+        top1Label == 'Viral' ||
+        top1Label == 'Urticarial_Hypersensitivity'
+      )
     ) {
 
       if (
