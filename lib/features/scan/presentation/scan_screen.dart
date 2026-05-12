@@ -24,9 +24,9 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    BackendWarmupService.warmup();
     WidgetsBinding.instance.addObserver(this);
     _initCamera();
-    BackendWarmupService.warmup();
   }
 
   @override
