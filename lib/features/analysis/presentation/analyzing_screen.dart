@@ -39,6 +39,7 @@ class AnalyzingScreen extends StatefulWidget {
 
 class _AnalyzingScreenState extends State<AnalyzingScreen>
     with TickerProviderStateMixin {
+  String _statusText = 'SkinBuddy is analyzing your skin condition...';
   late final AnimationController _rotationController;
   late final AnimationController _pulseController;
 
@@ -60,8 +61,17 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   }
 
   Future<void> _startAnalysis() async {
+    setState(() {
+      _statusText =
+          'SkinBuddy is analyzing your skin condition...';
+    });
 
     final inference = InferenceService();
+
+    setState(() {
+      _statusText =
+          'SkinBuddy is identifying possible skin conditions...';
+    });
 
     final triageRecords =
     TriageRecordService();
@@ -112,11 +122,21 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
       }
 
       // TRIAGE LOGIC
+      setState(() {
+        _statusText =
+            'SkinBuddy is determining the triage level...';
+      });
+
       final decision =
       TriageLogic.evaluate(
         groups: groups,
         contextData: contextPayload,
       );
+
+      setState(() {
+        _statusText =
+            'SkinBuddy is writing your report...';
+      });
 
       // SAVE REPORT
       final docRef =
@@ -347,7 +367,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
             const SizedBox(height: AppSpacing.xxl),
 
             const Text(
-              'Analyzing your skin',
+              'Your skin, understood',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -365,12 +385,23 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
                   child: child,
                 );
               },
-              child: const Text(
-                'SkinBuddy is evaluating...',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
+              child: SizedBox(
+                width: 260,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 4,
+                  ),
+                  child: Text(
+                    _statusText,
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
             ),
