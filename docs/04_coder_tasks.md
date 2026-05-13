@@ -9,7 +9,6 @@
 ## ML Tasks
 - Add class imbalance handling (augmentation or weighted loss) if needed.
 - Export validation metrics to file for model registry history.
-- Add script for automatic copy of `model.tflite` into Flutter assets.
 
 ## Safety and Compliance Tasks
 - Add consent screen before storing any image-linked metadata.

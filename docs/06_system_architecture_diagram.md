@@ -12,8 +12,6 @@ flowchart LR
   end
 
   subgraph onDeviceML [OnDeviceML]
-    tfliteModel["model.tflite"]
-    labelsTxt["labels.txt"]
   end
 
   subgraph firebaseBackend [FirebaseBackend]
