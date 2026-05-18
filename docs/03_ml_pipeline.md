@@ -20,11 +20,9 @@ for on-device inference in Flutter.
 ## Artifacts
 - SavedModel: `ml/models/saved_model`
 - Best Keras checkpoint: `ml/models/best_model.keras`
-- TFLite model: `ml/models/model.tflite`
 
 ## Notes for Coders
 - Keep training preprocessing aligned with mobile preprocessing.
-- Update `assets/models/labels.txt` to match class order in dataset.
 - If classes change, regenerate model and re-test triage thresholds.
 
 ## Recommended Evaluation Gate

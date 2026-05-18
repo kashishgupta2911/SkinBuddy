@@ -11,6 +11,18 @@ import '../../report/domain/triage_report_view_data.dart';
 import '../../report/presentation/report_screen.dart';
 import '../../result/domain/triage_logic.dart';
 
+String _confidenceLevel(double confidence) {
+  if (confidence >= 0.60) {
+    return 'high';
+  }
+
+  if (confidence >= 0.40) {
+    return 'moderate';
+  }
+
+  return 'low';
+}
+
 class AnalyzingScreen extends StatefulWidget {
   const AnalyzingScreen({
     super.key,
@@ -27,6 +39,7 @@ class AnalyzingScreen extends StatefulWidget {
 
 class _AnalyzingScreenState extends State<AnalyzingScreen>
     with TickerProviderStateMixin {
+  String _statusText = 'SkinBuddy is analyzing your skin condition...';
   late final AnimationController _rotationController;
   late final AnimationController _pulseController;
 
@@ -48,8 +61,17 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
   }
 
   Future<void> _startAnalysis() async {
+    setState(() {
+      _statusText =
+          'SkinBuddy is analyzing your skin condition...';
+    });
 
     final inference = InferenceService();
+
+    setState(() {
+      _statusText =
+          'SkinBuddy is identifying possible skin conditions...';
+    });
 
     final triageRecords =
     TriageRecordService();
@@ -99,20 +121,22 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
         ];
       }
 
-      // TOP PREDICTION
-      final top = groups.first;
-
-      final prediction =
-      PredictionResult(
-        label: top.group,
-        confidence: top.confidence,
-      );
-
       // TRIAGE LOGIC
+      setState(() {
+        _statusText =
+            'SkinBuddy is determining the triage level...';
+      });
+
       final decision =
       TriageLogic.evaluate(
-        prediction,
+        groups: groups,
+        contextData: contextPayload,
       );
+
+      setState(() {
+        _statusText =
+            'SkinBuddy is writing your report...';
+      });
 
       // SAVE REPORT
       final docRef =
@@ -202,10 +226,8 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
                   predictedGroups:
                   groups,
 
-                  isUrgent:
-                  decision.outcome ==
-                      TriageOutcome
-                          .urgent,
+                  triageLevel:
+                  decision.outcome.name,
 
                   contextData:
                   contextPayload,
@@ -247,6 +269,22 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
     required TriageDecision decision,
     required Map<String, dynamic> contextData,
   }) {
+
+    final topConfidence =
+        groups.isNotEmpty
+        ? groups.first.confidence
+        : 0.0;
+
+    final top1 =
+        groups.isNotEmpty
+        ? groups.first.group
+        : 'unknown';
+
+    final top2 =
+        groups.length > 1
+        ? groups[1].group
+        : null;
+
     return {
       'predicted_groups': groups
           .map(
@@ -256,14 +294,47 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
             },
           )
           .toList(growable: false),
-      'triage_level': decision.outcome.name,
-      'triage_reason': decision.reason,
-      'related_category': contextData['related_category'],
-      'texture': contextData['texture'],
-      'body_area': contextData['body_area'],
-      'condition_symptoms': contextData['condition_symptoms'],
-      'other_symptoms': contextData['other_symptoms'],
-      'duration': contextData['duration'],
+
+      // TRIAGE OUTPUTS
+      'triage_level':
+          decision.outcome.name,
+
+      'triage_reason':
+          decision.reason,
+
+      'clinical_review_recommended':
+          decision.clinicalReviewRecommended,
+
+      // MODEL INTERPRETATION
+      'confidence_level':
+          _confidenceLevel(
+            topConfidence,
+          ),
+
+      'top1_prediction':
+          top1,
+
+      'top2_prediction':
+          top2,
+
+      // USER CONTEXT
+      'related_category':
+          contextData['related_category'],
+
+      'texture':
+          contextData['texture'],
+
+      'body_area':
+          contextData['body_area'],
+
+      'condition_symptoms':
+          contextData['condition_symptoms'],
+
+      'other_symptoms':
+          contextData['other_symptoms'],
+
+      'duration':
+          contextData['duration'],
     };
   }
 
@@ -296,7 +367,7 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
             const SizedBox(height: AppSpacing.xxl),
 
             const Text(
-              'Analyzing your skin',
+              'Your skin, understood',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -314,12 +385,23 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
                   child: child,
                 );
               },
-              child: const Text(
-                'SkinBuddy is evaluating...',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
+              child: SizedBox(
+                width: 260,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 4,
+                  ),
+                  child: Text(
+                    _statusText,
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
             ),

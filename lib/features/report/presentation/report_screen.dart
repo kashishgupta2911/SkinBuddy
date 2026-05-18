@@ -14,14 +14,73 @@ class ReportScreen extends StatelessWidget {
 
   final TriageReportViewData viewData;
 
-  String get _urgencyTag => viewData.isUrgent ? 'Urgent' : 'Low urgency';
-  Color get _tagBg =>
-      viewData.isUrgent ? AppColors.redChip : AppColors.greenChip;
-  Color get _tagText =>
-      viewData.isUrgent ? AppColors.redText : AppColors.greenText;
-  String get _urgencySubtext => viewData.isUrgent
-      ? 'Consult a professional'
-      : 'Self-care recommended';
+  String get _urgencyTag {
+    final level =
+        viewData.triageLevel.trim().toLowerCase();
+
+    switch (level) {
+      case 'urgent':
+        return 'Urgent';
+
+      case 'expedite':
+        return 'Expedite';
+
+      case 'nonurgent':
+      default:
+        return 'Nonurgent';
+    }
+  }
+
+  Color get _tagBg {
+    final level =
+        viewData.triageLevel.trim().toLowerCase();
+
+    switch (level) {
+      case 'urgent':
+        return AppColors.redChip;
+
+      case 'expedite':
+        return AppColors.yellowChip;
+
+      case 'nonurgent':
+      default:
+        return AppColors.greenChip;
+    }
+  }
+
+  Color get _tagText {
+    final level =
+        viewData.triageLevel.trim().toLowerCase();
+
+    switch (level) {
+      case 'urgent':
+        return AppColors.redText;
+
+      case 'expedite':
+        return AppColors.yellowText;
+
+      case 'nonurgent':
+      default:
+        return AppColors.greenText;
+    }
+  }
+
+  String get _urgencySubtext {
+    final level =
+        viewData.triageLevel.trim().toLowerCase();
+
+    switch (level) {
+      case 'urgent':
+        return 'Consult a healthcare professional soon';
+
+      case 'expedite':
+        return 'Medical follow-up recommended';
+
+      case 'nonurgent':
+      default:
+        return 'Self-care and monitoring recommended';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +230,7 @@ class ReportScreen extends StatelessWidget {
     ];
 
     return _sectionCard(
-      title: 'Your context',
+      title: 'Your Context',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -215,67 +274,172 @@ class ReportScreen extends StatelessWidget {
   }
 
   Widget _buildPredictionsCard() {
+
     final groups = [...viewData.predictedGroups]
       ..sort((a, b) => b.confidence.compareTo(a.confidence));
-    return _sectionCard(
-      title: 'Model predictions',
-      subtitle:
-          'Probabilities from on-device screening (not a diagnosis).',
-      child: groups.isEmpty
-          ? const Text(
-              'No prediction scores available.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < groups.length; i++) ...[
-                  if (i > 0) const SizedBox(height: AppSpacing.sm),
-                  _predictionRow(groups[i]),
-                ],
-              ],
+
+    final topConfidence =
+        groups.isEmpty
+            ? 0.0
+            : groups.first.confidence;
+
+    final isLowConfidence =
+        topConfidence < 0.40;
+
+    return Column(
+      children: [
+
+        if (isLowConfidence) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(
+              AppSpacing.sm,
             ),
+            decoration: BoxDecoration(
+              color: AppColors.yellowChip,
+              borderRadius:
+                  BorderRadius.circular(12),
+            ),
+            child: const Text(
+              'Clinical review recommended. '
+              'The model confidence is low, '
+              'so results should not be treated '
+              'as definitive.',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.yellowText,
+                height: 1.4,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        _sectionCard(
+          title: 'Model Predictions',
+          subtitle:
+              'Probabilities from AI-assisted screening '
+              '(not a medical diagnosis).',
+          child: groups.isEmpty
+              ? const Text(
+                  'No prediction scores available.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0;
+                        i < groups.length;
+                        i++) ...[
+
+                      if (i > 0)
+                        const SizedBox(
+                          height: AppSpacing.sm,
+                        ),
+
+                      _predictionRow(groups[i]),
+                    ],
+                  ],
+                ),
+        ),
+      ],
     );
   }
 
   Widget _predictionRow(PredictedGroup g) {
-    final confidence = g.confidence.clamp(0.0, 1.0);
-    final pct = (confidence * 100).toStringAsFixed(1);
+
+    final confidence =
+        g.confidence.clamp(0.0, 1.0);
+
+    final pct =
+        (confidence * 100)
+            .toStringAsFixed(1);
 
     Color barColor;
 
-    if (confidence >= 0.75) {
-      barColor = AppColors.redText;
-    } else if (confidence >= 0.45) {
-      barColor = AppColors.yellowText;
+    String confidenceLabel;
+
+    if (confidence >= 0.60) {
+
+      barColor =
+          AppColors.confidenceHigh;
+
+      confidenceLabel =
+          'High confidence';
+
+    } else if (confidence >= 0.40) {
+
+      barColor =
+          AppColors.confidenceModerate;
+
+      confidenceLabel =
+          'Moderate confidence';
+
     } else {
-      barColor = AppColors.greenText;
+
+      barColor =
+          AppColors.confidenceLow;
+
+      confidenceLabel =
+          'Low confidence';
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
+
         Row(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
+
             Expanded(
-              child: Text(
-                g.group.replaceAll('_', ' '),
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+
+                  Text(
+                    g.group
+                        .replaceAll('_', ' '),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight:
+                          FontWeight.w600,
+                      color:
+                          AppColors.textPrimary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  Text(
+                    confidenceLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight:
+                          FontWeight.w500,
+                      color: barColor,
+                    ),
+                  ),
+                ],
               ),
             ),
+
             Text(
               '$pct%',
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w700,
+                fontWeight:
+                    FontWeight.w700,
                 color: barColor,
               ),
             ),
@@ -285,12 +449,17 @@ class ReportScreen extends StatelessWidget {
         const SizedBox(height: 8),
 
         ClipRRect(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius:
+              BorderRadius.circular(999),
           child: LinearProgressIndicator(
             value: confidence,
             minHeight: 10,
-            backgroundColor: AppColors.iconBg,
-            valueColor: AlwaysStoppedAnimation(barColor),
+            backgroundColor:
+                AppColors.iconBg,
+            valueColor:
+                AlwaysStoppedAnimation(
+              barColor,
+            ),
           ),
         ),
       ],
@@ -335,7 +504,7 @@ class ReportScreen extends StatelessWidget {
   Widget _buildExplanationCard() {
     final text = viewData.explanation.trim();
     return _sectionCard(
-      title: 'What this may mean',
+      title: 'What This May Mean',
       child: Text(
         text.isEmpty
             ? 'No AI-generated summary is available for this report.'
