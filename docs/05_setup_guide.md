@@ -27,8 +27,6 @@
    - `python src/train.py`
 4. Convert:
    - `python src/convert_to_tflite.py`
-5. Copy generated `ml/models/model.tflite` to:
-   - `assets/models/model.tflite`
 
 ## Firestore Setup
 - Enable Authentication -> Anonymous provider.

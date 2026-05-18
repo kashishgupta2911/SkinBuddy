@@ -91,17 +91,6 @@ Training behavior:
 - evaluation on validation set
 - classification report and confusion matrix output
 
-Conversion command:
-- `python src/convert_to_tflite.py`
-
-Artifacts:
-- `ml/models/saved_model`
-- `ml/models/best_model.keras`
-- `ml/models/model.tflite`
-
-Deploy artifact:
-- Copy `ml/models/model.tflite` to `assets/models/model.tflite`
-
 ## 9) Setup Instructions
 ### Prerequisites
 - Flutter SDK stable
@@ -165,11 +154,9 @@ Deploy artifact:
 
 ## 14) Quick Troubleshooting
 - Model not loading:
-  - confirm `assets/models/model.tflite` exists
   - confirm asset path in `pubspec.yaml`
 - Firebase write failing:
   - confirm anonymous auth enabled
   - confirm Firestore rules and app initialization
 - Inference quality poor:
   - verify class balance and preprocessing consistency
-  - re-check labels order between model and `labels.txt`
