@@ -28,24 +28,14 @@ N_PATCHES = 16
 # LABEL MAPS
 # ============================================================
 
-CONDITION_TO_GROUP_PAPER4 = {
-    "Eczema": "Eczema",
-    "Atopic Dermatitis": "Eczema",
-    "Contact Dermatitis": "Eczema",
+RAW_CONDITION_TO_CLINICAL8 = {
+    "Acne": "Acneiform",
+    "Acne Vulgaris": "Acneiform",
 
-    "Acne": "Acne",
-    "Acne Vulgaris": "Acne",
+    "Eczema": "Eczematous_Dermatitis",
+    "Atopic Dermatitis": "Eczematous_Dermatitis",
 
-    "Psoriasis": "Psoriasis",
-
-    "Melanoma": "Melanoma",
-    "Melanoma In Situ": "Melanoma",
-}
-
-CONDITION_TO_BINARY = {
-    **{k: "Diseased" for k in CONDITION_TO_GROUP_PAPER4},
-    "Normal Skin": "Healthy",
-    "Healthy": "Healthy",
+    "Psoriasis": "Papulosquamous_Lichenoid",
 }
 
 
@@ -145,7 +135,7 @@ def load_scin_data(cases_csv, labels_csv):
 # LABEL CREATION
 # ============================================================
 
-def create_labels(df, mode="paper4"):
+def create_labels(df):
 
     df = df.copy()
 
@@ -157,15 +147,9 @@ def create_labels(df, mode="paper4"):
         lambda d: max(d, key=d.get) if d else None
     )
 
-    mapping = (
-        CONDITION_TO_GROUP_PAPER4
-        if mode == "paper4"
-        else CONDITION_TO_BINARY
-    )
-
     df["target_label"] = df[
         "primary_condition"
-    ].map(mapping)
+    ].map(RAW_CONDITION_TO_CLINICAL8)
 
     return df[df["target_label"].notna()].copy()
 

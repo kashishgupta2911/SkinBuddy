@@ -9,11 +9,16 @@ DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"
 )
 
-PAPER4_CLASSES = [
-    "Acne",
-    "Eczema",
-    "Melanoma",
-    "Psoriasis",
+# Clinical triage-oriented classes used by the trained hybrid model
+CLINICAL8_CLASSES = [
+    "Acneiform",
+    "Bacterial_Follicular",
+    "Drug_Vasculitic_Purpuric",
+    "Eczematous_Dermatitis",
+    "Fungal",
+    "Papulosquamous_Lichenoid",
+    "Urticarial_Hypersensitivity",
+    "Viral",
 ]
 
 BINARY_CLASSES = [
