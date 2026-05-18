@@ -118,6 +118,11 @@ RELATED_CATEGORIES = [
     "OTHER_ISSUE_DESCRIPTION",
 ]
 
+SEX_COLS = [
+    "sex_male",
+    "sex_female",
+]
+
 # ============================================================
 # USER INPUT → TRAINING FEATURE MAPPINGS
 # ============================================================
@@ -338,6 +343,20 @@ def build_metadata_vector(meta: Dict):
         features.append(
             float(col == texture_col)
         )
+
+    # ========================================================
+    # Sex
+    # ========================================================
+
+    sex = meta.get("sex", None)
+
+    for col in SEX_COLS:
+
+        if col == "sex_male":
+            features.append(float(sex == "male"))
+
+        elif col == "sex_female":
+            features.append(float(sex == "female"))
 
     # ========================================================
     # Duration
