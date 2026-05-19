@@ -411,7 +411,7 @@ class _TimelineItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Likely: ${entry.predictedGroup}',
+                  'Likely: ${entry.predictedGroup.replaceAll('_', ' ')}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,

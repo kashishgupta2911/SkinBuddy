@@ -2,10 +2,13 @@
 
 fastapi
 uvicorn
+
 torch
 torchvision
+
 numpy
-pillow
-python-multipart
-scikit-learn
 pandas
+pillow
+scikit-learn
+
+python-multipart

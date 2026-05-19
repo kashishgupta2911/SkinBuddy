@@ -88,34 +88,84 @@ class HybridModel(nn.Module):
         num_classes: int,
         meta_dim: int,
         embed_dim: int = EMBED_DIM,
+        backbone_name: str = "efficientnet_v2_s",
     ):
         super().__init__()
 
-        try:
-            backbone = models.resnet18(
-                weights=models.ResNet18_Weights.DEFAULT
+        # ========================================================
+        # Image backbone
+        # ========================================================
+
+        if backbone_name == "efficientnet_v2_s":
+            try:
+                backbone = models.efficientnet_v2_s(
+                    weights=models.EfficientNet_V2_S_Weights.DEFAULT
+                )
+
+            except Exception:
+                backbone = models.efficientnet_v2_s(
+                    weights=None
+                )
+
+            in_features = backbone.classifier[-1].in_features
+
+            backbone.classifier[-1] = nn.Linear(
+                in_features,
+                embed_dim,
             )
 
-        except Exception:
-            backbone = models.resnet18(weights=None)
+        elif backbone_name == "efficientnet_b2":
+            try:
+                backbone = models.efficientnet_b2(
+                    weights=models.EfficientNet_B2_Weights.DEFAULT
+                )
 
-        backbone.fc = nn.Linear(
-            backbone.fc.in_features,
-            embed_dim,
-        )
+            except Exception:
+                backbone = models.efficientnet_b2(
+                    weights=None
+                )
+
+            in_features = backbone.classifier[-1].in_features
+
+            backbone.classifier[-1] = nn.Linear(
+                in_features,
+                embed_dim,
+            )
+
+        else:
+            raise ValueError(
+                f"Unsupported backbone: {backbone_name}"
+            )
 
         self.backbone = backbone
 
-        self.fcrn = FCRN(embed_dim=embed_dim // 2)
+        # ========================================================
+        # Patch branch
+        # ========================================================
 
-        fused_dim = embed_dim + embed_dim // 2 + meta_dim
+        self.fcrn = FCRN(
+            embed_dim=embed_dim // 2
+        )
+
+        # ========================================================
+        # Fusion classifier
+        # ========================================================
+
+        fused_dim = (
+            embed_dim +
+            embed_dim // 2 +
+            meta_dim
+        )
 
         self.classifier = nn.Sequential(
             nn.Linear(fused_dim, 128),
+
             nn.LeakyReLU(0.1),
+
             nn.Dropout(0.1),
 
             nn.Linear(128, 64),
+
             nn.LeakyReLU(0.1),
 
             nn.Linear(64, num_classes),
@@ -127,9 +177,46 @@ class HybridModel(nn.Module):
         patch: torch.Tensor,
         meta: torch.Tensor,
     ):
+        # ========================================================
+        # Full image branch
+        # ========================================================
+
         img_feat = self.backbone(img)
 
-        patch_feat = self.fcrn(patch)
+        # ========================================================
+        # Patch branch
+        # Supports:
+        # (B, N, 3, H, W)
+        # OR
+        # (B, 3, H, W)
+        # ========================================================
+
+        if patch.dim() == 5:
+            B, N, C, H, W = patch.shape
+
+            patch = patch.view(
+                B * N,
+                C,
+                H,
+                W,
+            )
+
+            patch_feat = self.fcrn(patch)
+
+            patch_feat = patch_feat.view(
+                B,
+                N,
+                -1,
+            )
+
+            patch_feat = patch_feat.mean(dim=1)
+
+        else:
+            patch_feat = self.fcrn(patch)
+
+        # ========================================================
+        # Fusion
+        # ========================================================
 
         fused = torch.cat(
             [img_feat, patch_feat, meta],

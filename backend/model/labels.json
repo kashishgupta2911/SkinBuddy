@@ -1,6 +1,10 @@
 {
-  "0": "Acne",
-  "1": "Eczema",
-  "2": "Melanoma",
-  "3": "Psoriasis"
+  "0": "Acneiform",
+  "1": "Bacterial_Follicular",
+  "2": "Drug_Vasculitic_Purpuric",
+  "3": "Eczematous_Dermatitis",
+  "4": "Fungal",
+  "5": "Papulosquamous_Lichenoid",
+  "6": "Urticarial_Hypersensitivity",
+  "7": "Viral"
 }

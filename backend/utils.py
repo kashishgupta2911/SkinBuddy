@@ -1,7 +1,7 @@
 # utils.py
 
 import random
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import torch
@@ -37,7 +37,8 @@ tf_patch = transforms.Compose([
 ])
 
 # ============================================================
-# METADATA
+# TRAINING FEATURE ORDER
+# MUST MATCH TRAINING SCRIPT EXACTLY
 # ============================================================
 
 SYMPTOM_COLS = [
@@ -105,60 +106,299 @@ AGE_GROUPS = [
     "80 or above",
 ]
 
+RELATED_CATEGORIES = [
+    "ACNE",
+    "GROWTH_OR_MOLE",
+    "HAIR_LOSS",
+    "OTHER_HAIR_PROBLEM",
+    "NAIL_PROBLEM",
+    "PIGMENTARY_PROBLEM",
+    "RASH",
+    "LOOKS_HEALTHY",
+    "OTHER_ISSUE_DESCRIPTION",
+]
 
-def yn_to_float(v):
-    if isinstance(v, bool):
-        return float(v)
+SEX_COLS = [
+    "sex_male",
+    "sex_female",
+]
 
-    if isinstance(v, str):
-        return 1.0 if v.strip().upper() == "YES" else 0.0
+# ============================================================
+# USER INPUT → TRAINING FEATURE MAPPINGS
+# ============================================================
 
-    return 0.0
+SYMPTOM_MAP = {
+    "Bothersome appearance":
+        "condition_symptoms_bothersome_appearance",
 
+    "Bleeding":
+        "condition_symptoms_bleeding",
+
+    "Increasing size":
+        "condition_symptoms_increasing_size",
+
+    "Darkening":
+        "condition_symptoms_darkening",
+
+    "Itching":
+        "condition_symptoms_itching",
+
+    "Burning":
+        "condition_symptoms_burning",
+
+    "Pain":
+        "condition_symptoms_pain",
+
+    "None of these":
+        "condition_symptoms_no_relevant_experience",
+}
+
+OTHER_SYMPTOM_MAP = {
+    "Fever":
+        "other_symptoms_fever",
+
+    "Chills":
+        "other_symptoms_chills",
+
+    "Fatigue":
+        "other_symptoms_fatigue",
+
+    "Joint pain":
+        "other_symptoms_joint_pain",
+
+    "Mouth sores":
+        "other_symptoms_mouth_sores",
+
+    "Shortness of breath":
+        "other_symptoms_shortness_of_breath",
+
+    "None of these":
+        "other_symptoms_no_relevant_symptoms",
+}
+
+BODY_AREA_MAP = {
+    "Head or Neck":
+        "body_parts_head_or_neck",
+
+    "Arm":
+        "body_parts_arm",
+
+    "Palm":
+        "body_parts_palm",
+
+    "Back of Hand":
+        "body_parts_back_of_hand",
+
+    "Torso Front":
+        "body_parts_torso_front",
+
+    "Torso Back":
+        "body_parts_torso_back",
+
+    "Genitalia or Groin":
+        "body_parts_genitalia_or_groin",
+
+    "Buttocks":
+        "body_parts_buttocks",
+
+    "Leg":
+        "body_parts_leg",
+
+    "Foot Top or Side":
+        "body_parts_foot_top_or_side",
+
+    "Foot Sole":
+        "body_parts_foot_sole",
+
+    "Other":
+        "body_parts_other",
+}
+
+TEXTURE_MAP = {
+    "Raised or Bumpy":
+        "textures_raised_or_bumpy",
+
+    "Flat":
+        "textures_flat",
+
+    "Rough or Flaky":
+        "textures_rough_or_flaky",
+
+    "Fluid filled":
+        "textures_fluid_filled",
+}
+
+DURATION_MAP = {
+    "One day":
+        "ONE_DAY",
+
+    "Less than one week":
+        "LESS_THAN_ONE_WEEK",
+
+    "One to four weeks":
+        "ONE_TO_FOUR_WEEKS",
+
+    "One to three months":
+        "ONE_TO_THREE_MONTHS",
+
+    "Three to twelve months":
+        "THREE_TO_TWELVE_MONTHS",
+
+    "More than one year":
+        "MORE_THAN_ONE_YEAR",
+
+    "More than five years":
+        "MORE_THAN_FIVE_YEARS",
+
+    "Since childhood":
+        "SINCE_CHILDHOOD",
+
+    "Unknown":
+        "UNKNOWN",
+}
+
+RELATED_CATEGORY_MAP = {
+    "Acne": "ACNE",
+    "Growth or Mole": "GROWTH_OR_MOLE",
+    "Hair Loss": "HAIR_LOSS",
+    "Other Hair Problem": "OTHER_HAIR_PROBLEM",
+    "Nail Problem": "NAIL_PROBLEM",
+    "Pigmentary Problem": "PIGMENTARY_PROBLEM",
+    "Rash": "RASH",
+    "Looks Healthy": "LOOKS_HEALTHY",
+    "Other": "OTHER_ISSUE_DESCRIPTION",
+}
+
+# ============================================================
+# METADATA VECTOR
+# ============================================================
 
 def build_metadata_vector(meta: Dict):
 
     features = []
 
-    # Binary features
-    for col in (
-        SYMPTOM_COLS
-        + OTHER_COLS
-        + BODY_COLS
-        + TEXTURE_COLS
-    ):
-        features.append(
-            yn_to_float(meta.get(col, 0))
+    symptom_set = set(
+        meta.get("condition_symptoms", [])
+    )
+
+    other_symptom_set = set(
+        meta.get("other_symptoms", [])
+    )
+
+    body_area_set = set(
+        meta.get("body_area", [])
+    )
+
+    texture_value = meta.get(
+        "texture",
+        None,
+    )
+
+    # ========================================================
+    # Symptoms
+    # ========================================================
+
+    for col in SYMPTOM_COLS:
+
+        active = any(
+            SYMPTOM_MAP.get(v) == col
+            for v in symptom_set
         )
 
-    # Duration one-hot
-    duration = meta.get("condition_duration", None)
+        features.append(float(active))
+
+    # ========================================================
+    # Other symptoms
+    # ========================================================
+
+    for col in OTHER_COLS:
+
+        active = any(
+            OTHER_SYMPTOM_MAP.get(v) == col
+            for v in other_symptom_set
+        )
+
+        features.append(float(active))
+
+    # ========================================================
+    # Body areas
+    # ========================================================
+
+    for col in BODY_COLS:
+
+        active = any(
+            BODY_AREA_MAP.get(v) == col
+            for v in body_area_set
+        )
+
+        features.append(float(active))
+
+    # ========================================================
+    # Texture
+    # ========================================================
+
+    texture_col = TEXTURE_MAP.get(texture_value)
+
+    for col in TEXTURE_COLS:
+        features.append(
+            float(col == texture_col)
+        )
+
+    # ========================================================
+    # Sex
+    # ========================================================
+
+    sex = meta.get("sex", None)
+
+    for col in SEX_COLS:
+
+        if col == "sex_male":
+            features.append(float(sex == "male"))
+
+        elif col == "sex_female":
+            features.append(float(sex == "female"))
+
+    # ========================================================
+    # Duration
+    # ========================================================
+
+    duration = DURATION_MAP.get(
+        meta.get("duration"),
+        "UNKNOWN",
+    )
 
     for cat in DURATION_CATS:
         features.append(
-            1.0 if duration == cat else 0.0
+            float(cat == duration)
         )
 
-    # Age group one-hot
-    age_group = meta.get("age_group", None)
+    # ========================================================
+    # Age group
+    # ========================================================
+
+    age_group = meta.get(
+        "age_range",
+        None,
+    )
 
     for a in AGE_GROUPS:
         features.append(
-            1.0 if age_group == a else 0.0
+            float(a == age_group)
         )
 
-    # Sex one-hot
-    sex = str(
-        meta.get("sex_at_birth", "")
-    ).strip().lower()
+    # ========================================================
+    # Related category
+    # ========================================================
 
-    features.append(
-        1.0 if sex in ("female", "f") else 0.0
+    related_category = RELATED_CATEGORY_MAP.get(
+        meta.get("related_category"),
+        None,
     )
 
-    features.append(
-        1.0 if sex in ("male", "m") else 0.0
-    )
+    for cat in RELATED_CATEGORIES:
+        features.append(
+            float(cat == related_category)
+        )
 
     return np.array(
         features,
@@ -177,21 +417,43 @@ def extract_patches(
 
     patches = []
 
-    step_x = max(1, w // int(n ** 0.5))
-    step_y = max(1, h // int(n ** 0.5))
+    step_x = max(
+        1,
+        w // int(n ** 0.5),
+    )
+
+    step_y = max(
+        1,
+        h // int(n ** 0.5),
+    )
 
     ps = min(PATCH_SIZE, w, h)
 
-    for i in range(0, h - ps + 1, step_y):
-        for j in range(0, w - ps + 1, step_x):
-            crop = img.crop((j, i, j + ps, i + ps))
+    for i in range(
+        0,
+        h - ps + 1,
+        step_y,
+    ):
+        for j in range(
+            0,
+            w - ps + 1,
+            step_x,
+        ):
+            crop = img.crop(
+                (j, i, j + ps, i + ps)
+            )
+
             patches.append(crop)
 
     if len(patches) >= n:
-        patches = random.sample(patches, n)
+        patches = random.sample(
+            patches,
+            n,
+        )
     else:
         patches = (
-            patches * (n // len(patches) + 1)
+            patches
+            * (n // len(patches) + 1)
         )[:n]
 
     return patches
@@ -199,4 +461,5 @@ def extract_patches(
 
 def patches_to_tensor(patches):
     tensors = [tf_patch(p) for p in patches]
+
     return torch.stack(tensors)

@@ -23,6 +23,40 @@ String _confidenceLevel(double confidence) {
   return 'low';
 }
 
+List<PredictedGroup> _filterDisplayGroups(
+  List<PredictedGroup> groups,
+) {
+  final sorted = [...groups]
+    ..sort(
+      (a, b) => b.confidence.compareTo(a.confidence),
+    );
+
+  if (sorted.isEmpty) {
+    return [];
+  }
+
+  final topConfidence =
+      sorted.first.confidence;
+
+  // Low-confidence case:
+  // show top 2 for uncertainty transparency
+  if (topConfidence < 0.40) {
+    return sorted.take(2).toList();
+  }
+
+  // Otherwise only show predictions
+  // that are reasonably strong
+  return sorted.where((g) {
+
+    final closeEnough =
+        (topConfidence - g.confidence) <= 0.25;
+
+    return g.confidence >= 0.40 &&
+        closeEnough;
+
+  }).take(2).toList();
+}
+
 class AnalyzingScreen extends StatefulWidget {
   const AnalyzingScreen({
     super.key,
@@ -99,20 +133,21 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
           response['predicted_groups'] ?? [];
 
       List<PredictedGroup> groups =
-      rawGroups.map((g) {
-
+          rawGroups.map((g) {
         return PredictedGroup(
           group: g['name'],
           confidence:
-          (g['confidence'] as num)
-              .toDouble(),
+              (g['confidence'] as num)
+                  .toDouble(),
         );
-
       }).toList();
+
+      groups.sort(
+        (a, b) => b.confidence.compareTo(a.confidence),
+      );
 
       // fallback safety
       if (groups.isEmpty) {
-
         groups = [
           const PredictedGroup(
             group: 'unknown',
@@ -120,6 +155,9 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
           )
         ];
       }
+
+      final filteredGroups =
+          _filterDisplayGroups(groups);
 
       // TRIAGE LOGIC
       setState(() {
@@ -162,10 +200,9 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
               .generateExplanation(
             triagePayload:
             _buildGeminiPayload(
-              groups: groups,
+              groups: filteredGroups,
               decision: decision,
-              contextData:
-              contextPayload,
+              contextData: contextPayload,
             ),
           );
 
@@ -219,24 +256,12 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
 
                 viewData:
                 TriageReportViewData(
-
-                  imagePath:
-                  widget.imagePath,
-
-                  predictedGroups:
-                  groups,
-
-                  triageLevel:
-                  decision.outcome.name,
-
-                  contextData:
-                  contextPayload,
-
-                  explanation:
-                  explanation,
-
-                  geminiError:
-                  geminiError,
+                  imagePath: widget.imagePath,
+                  predictedGroups: filteredGroups,
+                  triageLevel: decision.outcome.name,
+                  contextData: contextPayload,
+                  explanation: explanation,
+                  geminiError: geminiError,
                 ),
               ),
         ),
@@ -295,7 +320,6 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
           )
           .toList(growable: false),
 
-      // TRIAGE OUTPUTS
       'triage_level':
           decision.outcome.name,
 
@@ -305,7 +329,6 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
       'clinical_review_recommended':
           decision.clinicalReviewRecommended,
 
-      // MODEL INTERPRETATION
       'confidence_level':
           _confidenceLevel(
             topConfidence,
@@ -317,7 +340,6 @@ class _AnalyzingScreenState extends State<AnalyzingScreen>
       'top2_prediction':
           top2,
 
-      // USER CONTEXT
       'related_category':
           contextData['related_category'],
 
